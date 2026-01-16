@@ -1,0 +1,705 @@
+body {
+margin: 0;
+padding: 20px 20px 300px 20px;
+font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+font-size: 1rem;
+background: #ffffff;
+color: #1c1c1e;
+max-width: 100%;
+overflow-x: hidden;
+}
+
+html,
+body,
+#editor {
+touch-action: manipulation;
+/* ダブルタップズームの制御 */
+}
+
+.auth-loading {
+display: none;
+}
+
+section {
+max-width: 800px;
+margin: auto;
+position: relative;
+}
+
+[hidden] {
+display: none;
+}
+
+button {
+font-size: 17px;
+margin: 4px 0;
+color: #0b62e5;
+border: none;
+cursor: pointer;
+background-color: transparent;
+}
+
+button, input, textarea {
+    outline: none; /* フォーカス枠を消す */
+}
+button {
+    -webkit-tap-highlight-color: transparent; /* iOS/Androidで青枠を消す */
+}
+ul {
+padding-left: 0;
+margin: 0;
+}
+
+img {
+width: 100%;
+height: auto;
+display: block;
+margin: 8px 0;
+}
+
+.flex-between {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding-left: 10px;
+padding-top: 10px;
+}
+
+body.dark {
+background: #000;
+color: #f2f2f7;
+}
+
+body.spread {
+padding-left: 0;
+padding-right: 0;
+}
+
+#toast {
+display: none;
+position: fixed;
+bottom: 16px;
+left: 50%;
+transform: translateX(-50%);
+background: rgba(0, 0, 0, 0.8);
+color: #fff;
+padding: 12px 24px;
+border-radius: 8px;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+z-index: 1000000;
+}
+
+#toast.show {
+display: block;
+opacity: 1;
+pointer-events: auto;
+}
+
+body.spread section {
+max-width: 100%;
+}
+
+#sidebar {
+position: fixed;
+left: 0;
+top: 0;
+bottom: 0;
+width: 300px;
+height: 100dvh;
+background: #f9f9f9;
+box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+transform: translateX(-100%);
+transition: transform 0.3s ease;
+overflow-y: auto;
+z-index: 1300;
+padding-right: 10px;
+border-radius: 10px;
+box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark #sidebar {
+background: #0c0c0c;
+}
+
+#sidebar.show {
+transform: translateX(0);
+}
+
+
+#sidebar-toggle {
+position: fixed;
+top: 0px;
+left: 10px;
+z-index: 1100;
+padding-top: 0;
+border-radius: 20px;
+font-size: 32px;
+background: #ffffff;
+transition: transform 0s ease, opacity 0s ease;
+display: none;
+}
+
+body.dark #sidebar-toggle {
+background: #000000;
+}
+
+#sidebar-toggle.hide {
+transform: translateY(-100%);
+opacity: 0;
+}
+
+#sidebar-toggle2 {
+position: absolute;
+font-size: 32px;
+top: 10px;
+left: 10px;
+z-index: 1100;
+padding-top: 0;
+background: #f9f9f9;
+}
+
+body.dark #sidebar-toggle2 {
+background: #000000;
+}
+
+#sidebar .flex-between {
+position: sticky;
+top: 0;
+left: 0;
+right: 0;
+z-index: 10;
+background: #f9f9f9;
+padding-bottom: 0px;
+}
+
+body.dark #sidebar .flex-between {
+background: black;
+}
+
+li {
+list-style: none;
+border-bottom: 1px solid #ddd;
+display: flex;
+justify-content: space-between;
+position: relative;
+user-select: none;
+cursor: default;
+flex-direction: column;
+padding: 8px 12px;
+/* paddingは最後に書く必要があるらしい*/
+}
+
+body.dark li {
+border-bottom-color: #333;
+}
+
+li a {
+flex: 1;
+/* li 全体を覆う */
+text-decoration: none;
+color: inherit;
+z-index: 1;
+}
+
+li:hover {
+background: #fcfcfc;
+}
+
+body.dark li:hover {
+background: #101010;
+}
+
+li .memo-title {
+font-weight: 610;
+flex: 1;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+margin-right: 8px;
+}
+
+#memo-list li.active {
+background-color: rgb(240, 240, 240);
+border-left: 4px solid #0071e3;
+}
+
+body.dark #memo-list li.active {
+background-color: rgb(28, 28, 28);
+}
+
+.date-span {
+font-size: 0.7em;
+color: #666;
+}
+
+body.dark .date-span {
+color: #aaa9a9;
+}
+
+.size-span {
+font-size: 0.75em;
+opacity: 0.6;
+margin-right: 6px;
+white-space: nowrap;
+}
+
+.size-warning {
+color: rgb(255, 0, 0);
+font-weight: 600;
+}
+
+#total-size {
+font-size: 12px;
+opacity: 0.7;
+margin: 4px 0 8px;
+text-align: right;
+}
+
+.memo-count {
+font-size: 12px;
+opacity: 0.7;
+margin: 4px 0 8px;
+text-align: right;
+}
+
+.menu-btn {
+font-size: 18px;
+padding: 6px 12px;
+border-radius: 6px;
+user-select: none;
+line-height: 0;
+color: #666;
+z-index: 2;
+margin: -26px -10px -10px -10px;
+/* 見た目を上にずらす */
+border: none;
+cursor: pointer;
+}
+
+body.dark .menu-btn {
+color: #f2f2f7;
+border-color: #333;
+}
+
+/* 触った時だけ枠が出る */
+.menu-btn:hover,
+.menu-btn:active {
+background: rgba(0, 0, 0, 0.025);
+}
+
+body.dark .menu-btn:hover,
+.menu-btn:active {
+background: rgba(255, 255, 255, 0.025);
+}
+
+.memo-right {
+display: flex;
+justify-content: space-between;
+width: 100%;
+line-height: 2;
+}
+
+.menu-popup {
+position: absolute;
+top: 35px;
+/* top: 100%; */
+right: -10px;
+background: #fff;
+border: 1px solid #ccc;
+padding: 6px 0;
+border-radius: 6px;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+display: none;
+z-index: 10;
+}
+
+body.dark .menu-popup {
+background: #1c1c1e;
+border-color: #333;
+}
+
+.menu-popup button {
+font-size: 17px;
+border-radius: 6px;
+width: auto;
+/* width: 100%; */
+text-align: left;
+padding: 8px 16px;
+background: none;
+border: none;
+cursor: pointer;
+}
+
+body.dark .menu-popup button {
+color: #f2f2f7;
+}
+
+.menu-popup button:hover {
+background: #eee;
+}
+
+body.dark .menu-popup button:hover {
+background: #333;
+}
+
+/* ===== フォントサイズポップアップ（ズレ防止） ===== */
+#font-size-popup {
+display: none;
+position: fixed;
+top: 56px;
+left: 20px;
+right: 20px;
+font-size: 18px;
+/* ← bodyの影響を切る */
+line-height: 1;
+border: 1px solid #ccc;
+padding: 12px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+z-index: 10000;
+}
+
+/* ===== スライダー行（高さ完全固定） ===== */
+#font-slider-wrap {
+height: 80px;
+/* ← 絶対固定 */
+display: flex;
+align-items: center;
+gap: 12px;
+font-size: 16px;
+/* ← 継承遮断 */
+line-height: 1;
+overflow: hidden;
+}
+
+/* サイズ表示 */
+#font-size-value {
+font-size: 20px;
+line-height: 1;
+white-space: nowrap;
+}
+
+/* ===== スライダー本体 ===== */
+#font-size-slider {
+width: 80%;
+}
+
+#title {
+width: 85%;
+border: none;
+outline: none;
+background: transparent;
+color: inherit;
+font-size: 1rem;
+line-height: 1.5;
+font-weight: 610;
+}
+
+h2 {
+display: block;
+font-size: 1.5em;
+margin-block-start: 0.5em;
+/* 上の余白 */
+margin-block-end: 0.5em;
+/* 下の余白 */
+font-weight: bold;
+margin-left: 0;
+}
+
+#user-icon {
+/* position: absolute; */
+/* position: fixed; */
+z-index: 10000;
+background: transparent;
+width: 40px;
+height: 40px;
+/* top: 0px; */
+/* top: 10px; */
+right: calc((100% - 800px)/2 + 0px);
+/* 親の右端から16px */
+border-radius: 50%;
+cursor: pointer;
+}
+
+#user-icon2 {
+z-index: 10000;
+background: transparent;
+width: 40px;
+height: 40px;
+right: calc((100% - 800px)/2 + 0px);
+/* 親の右端から16px */
+border-radius: 50%;
+cursor: pointer;
+}
+
+/* モバイルなど画面幅 < 800px の場合は右端16px固定 */
+@media (max-width: 799px) {
+#user-icon {
+right: 0;
+}
+}
+
+@media (max-width: 799px) {
+#user-icon2 {
+right: 0;
+}
+}
+
+#user-menu {
+position: absolute;
+/* position: fixed; */
+top: 70px;
+right: 0px;
+/* 親の右端から16px */
+background: #ffffff;
+border: 1px solid #ddd;
+border-radius: 8px;
+display: none;
+z-index: 100;
+white-space: nowrap;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+overflow: hidden;
+}
+
+/* モバイルなど画面幅 < 800px の場合は右端16px固定 */
+@media (max-width: 799px) {
+#user-menu {
+right: 0px;
+}
+}
+
+#user-menu button {
+display: block;
+width: 100%;
+padding: 10px 16px;
+color: #0071e3;
+background: none;
+border: none;
+text-align: left;
+font-size: 15px;
+}
+
+#user-menu button:hover {
+background: #f2f2f7;
+z-index: 3;
+}
+
+body.dark #user-menu {
+background: #1c1c1e;
+border-color: #333;
+}
+
+body.dark #user-menu button {
+color: #007fff;
+}
+
+body.dark #user-menu button:hover {
+background: #24242e;
+}
+
+.logo-img {
+border-radius: 50%;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+body.dark .logo-img {
+border: 2px solid #ffffff;
+}
+
+#new-memo {
+position: fixed;
+right: 20px;
+bottom: 20px;
+width: 80px;
+height: 80px;
+border-radius: 50%;
+font-size: 40px;
+line-height: 1;
+opacity: 0.9;
+border: none;
+font-weight: 200;
+cursor: pointer;
+z-index: 1000;
+}
+
+/* ビューポートが親幅を超える場合に調整 */
+@media (min-width: 800px) {
+#new-memo {
+/* 親要素右端から16px */
+right: calc((100% - 800px)/2 + 20px);
+}
+}
+
+#editor {
+min-height: 70vh;
+padding-top: 30px;
+outline: none;
+white-space: pre-wrap;
+word-break: break-word;
+border-top: none;
+font-size: 1rem;
+line-height: 1.38;
+letter-spacing: 0.025em;
+color: #1c1c1e;
+}
+
+body.dark #editor {
+color: #f2f2f7;
+border-top-color: #333;
+}
+
+#editor a {
+cursor: pointer;
+text-decoration: underline;
+/* 👇 iOS長押し必須 */
+-webkit-touch-callout: default;
+-webkit-user-select: text;
+user-select: text;
+pointer-events: auto;
+/* 👇 Safariが「普通のリンク」と認識する条件 */
+display: inline;
+position: static;
+color: #0071e3;
+}
+
+#saveIndicator {
+position: fixed;
+top: 10px;
+right: 20px;
+display: flex;
+align-items: center;
+gap: 6px;
+font-size: 12px;
+color: #333;
+}
+
+
+.timestamp {
+display: inline;
+color: #999;
+font-weight: normal;
+}
+
+/* youtubeとニコニコのみ */
+.video {
+position: relative;
+width: 100%;
+padding-top: 56.25%;
+margin: 12px 0;
+}
+
+.video iframe {
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+border: 0;
+margin: 0;
+z-index: 1200;
+}
+
+/* TikTok 用（縦長） */
+.tiktok {
+width: 100%;
+height: 100%;
+aspect-ratio: 9/16;
+max-width: 440px;
+max-height: min(100vh, 783px);
+margin: 0 !important;
+padding: 0 !important;
+background: transparent !important;
+}
+
+.tiktok iframe {
+aspect-ratio: 9/16;
+width: 100%;
+height: 100%;
+max-width: 440px;
+max-height: min(100vh, 783px);
+border: 0;
+display: block;
+position: absolute;
+margin: 0 !important;
+padding: 0 !important;
+background: transparent !important;
+}
+
+body.spread .twitter {
+max-width: calc(100% - 40px);
+/* 左右padding分を引く */
+margin: 0 auto;
+/* 真ん中に寄せる */
+}
+
+body.spread .instagram {
+max-width: calc(100% - 40px);
+margin: 0 auto;
+}
+
+/* container にまとめる */
+.pin-modal-container {
+    position: fixed;
+    inset: 0;
+    z-index: 100000; /* JS から動的に変更可能 */
+}
+.modal-overlay {
+position: absolute;
+inset: 0;
+background: rgba(0, 0, 0, 0.45);
+z-index: 0;
+pointer-events: all;  /* ← ここ重要 */
+}
+
+.pin-modal-container .pin-modal {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+width: 320px;
+padding: 20px;
+border-radius: 10px;
+z-index: 1;
+background: #fff;
+color: #111;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+body.dark .pin-modal-container .pin-modal {
+background: #1e1e1e;
+color: #eee;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.pin-modal-container .pin-input {
+width: 400px !important;
+/* デフォルトより広く */
+min-width: 800px;
+}
+
+.pin-modal-container .pin-modal-title {
+margin: 0 0 12px;
+}
+
+.pin-modal-container .pin-modal-input {
+font-size: 23px;
+padding: 8px;
+border-radius: 5px;
+border: 1px solid #ccc;
+}
+
+/* buttons */
+.pin-modal-container .pin-modal-buttons {
+display: flex;
+gap: 8px;
+margin-top: 16px;
+}
+
+.pin-modal-container .pin-modal-remove {
+margin-right: auto;
+color: red;
+}
+
+.pin-modal-container .pin-modal-ok {
+font-weight: bold;
+}

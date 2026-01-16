@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<title>DreadNote</title>
+	<link rel="icon" href="img1.png" type="image/png">
+	<link rel="apple-touch-icon" href="img1.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script>
+		( function () {
+			try {
+				if ( localStorage.getItem( 'dreadnote-dark' ) === '1' ) {
+					document.documentElement.style.backgroundColor = '#000';
+					document.documentElement.style.colorScheme = 'dark';
+					document.body && ( document.body.style.backgroundColor = '#000' );
+				}
+			} catch ( e ) { }
+		} )();
+	</script>
+	<link rel="stylesheet" href="style.css">
+	<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+	<script async src="https://www.instagram.com/embed.js"></script>
+</head>
+
+<body class="auth-loading">
+
+	<button id="sidebar-toggle">＝</button>
+
+	<div id="sidebar" class="hidden">
+		<div class="flex-between">
+			<h2 style="font-size: 32px;"><button id="sidebar-toggle2">＝</button></h2>
+			<div style="display:flex;gap:8px;align-items:center ;">
+				<button id="new-memo-2" style="font-size: 40px; margin-right: 12px; margin-left: 12px; 
+ font-weight: 200; color: #0071e3;">＋</button>
+				<img id="user-icon" src="" title="User Menu">
+				<div id="user-menu">
+					<button id="font-size-btn">Aa</button>
+					<button id="spread-btn"></button>
+					<button id="dark-btn"></button>
+					<button id="go-trash">Trash</button>
+					<button id="go-list">Home</button>
+					<button id="logout-btn">Log out</button>
+				</div>
+			</div>
+		</div>
+		<div id="font-size-popup" class="menu-popup">
+			<input type="range" id="font-size-slider" min="12" max="28" value="16">
+			<span id="font-size-value"></span>
+		</div>
+		<ul id="memo-list"></ul>
+		<div id="memo-count" class="memo-count"></div>
+		<div id="total-size"></div>
+		<div style="height:200px;"></div> <!-- 下に余白 -->
+	</div>
+
+	<section id="view-login" hidden>
+		<h1>DreadNote</h1>
+		<button id="google-login">
+			<img src="ios_dark_sq_ctn.svg" alt="">
+		</button>
+	</section>
+
+	<section id="view-list" hidden>
+		<div class="flex-between">
+			<h1>DreadNote</h1>
+			<img id="user-icon2" src="">
+		</div>
+		<button id="new-memo">
+			<img src="img1.png" class="logo-img" alt="Logo">
+		</button>
+	</section>
+
+	<section id="view-editor">
+		<div id="editor" contenteditable="true"></div>
+		<div id="saveIndicator" class="hidden">
+			<div class="saveStatus"></div>
+			<span class="timestamp"></span>
+		</div>
+	</section>
+
+	<section id="view-trash" hidden>
+		<div class="flex-between">
+			<h2>Trash</h2>
+			<div style="display:flex;gap:8px;align-items:center;">
+				<button id="empty-trash-btn">Empty Trash</button>
+			</div>
+		</div>
+		<ul id="trash-list"></ul>
+	</section>
+	<div id="toast"></div>
+	<script type="module" src="script.js"></script>
+</body>
+
+</html>
