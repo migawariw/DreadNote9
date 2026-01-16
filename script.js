@@ -6,10 +6,17 @@ import { getDocs, getFirestore, collection, addDoc, doc, setDoc, getDoc, deleteD
 //1️⃣ Firebase 初期化・キャッシュ
 // RAMに一時的に保存（リロードで消える）
 let metaCache = null;        // ← 目次箱
-const memoCache = {};       // ← 本文キャッシュ
+const noteCache = {};       // ← 本文キャッシュ
 
 // firebase
-const firebaseConfig = { apiKey: "AIzaSyCdDf0GH80PoGlcbk2yjlaVQfP01Gk9m18", authDomain: "noteeditor-ba1db.firebaseapp.com", projectId: "noteeditor-ba1db" };
+const firebaseConfig = {
+  apiKey: "AIzaSyBOAzYlxRsAqlov_valRrOlYuD_O3irV6A",
+  authDomain: "dreadnote9-orion.firebaseapp.com",
+  projectId: "dreadnote9-orion",
+  storageBucket: "dreadnote9-orion.firebasestorage.app",
+  messagingSenderId: "52518748481",
+  appId: "1:52518748481:web:41bffae85624045e1261c0"
+};
 // ✅ 呼び出しの可能性あり（内部で軽くプロジェクト確認など）
 const app = initializeApp( firebaseConfig );
 // ❌ ローカルオブジェクト作成のみ → 通信なし
@@ -29,7 +36,7 @@ const views = {
 	editor: document.getElementById( 'view-editor' )
 };
 //メモ一覧、ゴミ箱、エディター、ユーザーアイコン、メニュー等を表示する要素を取得している
-const memoList = document.getElementById( 'memo-list' );
+const noteList = document.getElementById( 'note-list' );
 const trashList = document.getElementById( 'trash-list' );
 const editor = document.getElementById( 'editor' );
 const editorEl = document.getElementById( 'editor' );
@@ -61,8 +68,8 @@ let lastTouch = null;
 let isTouchDevice = false;
 let requireDoubleTap = false;
 let lastTapTime = 0;
-let currentMemoId = null;
-let memoLoaded = null;
+let currentNoteId = null;
+let noteLoaded = null;
 let localUpdated = 0;
 let hideStatusTimer = null;
 
@@ -86,7 +93,7 @@ sidebarToggle.onclick = async () => {
 	if ( sidebar.classList.contains( 'show' ) ) {
 		requireDoubleTap = true; // ← ★リセット
 		await loadMetaOnce();   // まず metaCache をロード
-		await loadMemos();      // メモ一覧を描画
+		await loadNotes();      // メモ一覧を描画
 	}
 };
 function closeSidebar() {
@@ -131,7 +138,7 @@ fontSlider.oninput = e => {
 	// editorElはHTMLのid editorのこと
 	editorEl.style.fontSize = size;
 	//一覧画面もサイズ反映
-	memoList.querySelectorAll( 'li' ).forEach( li => {
+	noteList.querySelectorAll( 'li' ).forEach( li => {
 		li.style.fontSize = size;
 	} );
 	//スライダーの横の文字も反映
@@ -147,13 +154,25 @@ if ( savedSize ) {
 	editorEl.style.fontSize = savedSize + 'px';
 	fontSlider.value = savedSize;
 	fontValue.textContent = savedSize + 'px';
-	memoList.querySelectorAll( 'li' ).forEach( li => li.style.fontSize = savedSize + 'px' );
+	noteList.querySelectorAll( 'li' ).forEach( li => li.style.fontSize = savedSize + 'px' );
 }
 
 // 初期状態を localStorage から取得
-const darkOn = localStorage.getItem( 'dreadnote-dark' ) === '1';
+
+// localStorage の値を取得
+let darkOn = localStorage.getItem('dreadnote-dark');
 if ( darkOn ) document.body.classList.add( 'dark' );
 
+
+if (darkOn === null) {
+  // localStorage に値がなければ端末の設定を確認
+  darkOn = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+} else {
+  // localStorage に値がある場合は '1' が true, それ以外は false
+  darkOn = darkOn === '1';
+}
+
+console.log('Dark mode:', darkOn);
 //ダークモードにするかどうかは端末に保存
 if ( darkBtn ) {
 	darkBtn.textContent = darkOn ? 'Light mode' : 'Dark mode';
@@ -246,7 +265,7 @@ window.addEventListener( 'hashchange', ( e ) => {
 } );
 
 
-//5️⃣ メモ関連の処理の関数（loadMeta, loadMemos, openEditor, saveMemo, updateMeta など）
+//5️⃣ メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 function renderTotalSize() {
 	const el = document.getElementById( 'total-size' );
 	if ( !el || !metaCache ) return;
@@ -257,11 +276,11 @@ function renderTotalSize() {
 			? ( bytes / ( 1024 * 1024 ) ).toFixed( 2 ) + ' MB'
 			: Math.round( bytes / 1024 ) + ' KB';
 }
-function renderMemoCount() {
-	const el = document.getElementById( 'memo-count' );
+function renderNoteCount() {
+	const el = document.getElementById( 'note-count' );
 	if ( !el ) return;
 
-	const count = metaCache.memos.filter( m => !m.deleted ).length;
+	const count = metaCache.notes.filter( m => !m.deleted ).length;
 	el.textContent = `メモ ${count} 件`;
 }
 async function loadMetaOnce() {
@@ -274,22 +293,22 @@ async function loadMetaOnce() {
 
 	if ( snap.exists() ) {
 		metaCache = snap.data();
-		if ( !Array.isArray( metaCache.memos ) ) {
-			metaCache.memos = [];
+		if ( !Array.isArray( metaCache.notes ) ) {
+			metaCache.notes = [];
 			metaWasFixed = true;
 		}
 	} else {
-		metaCache = { memos: [] };
+		metaCache = { notes: [] };
 		metaWasFixed = true;
 	}
 
 	// 🔁 meta が空なら Firestore から1回だけ復元
-	if ( metaCache.memos.length === 0 ) {
-		const memosSnap = await getDocs(
-			collection( db, 'users', auth.currentUser.uid, 'memos' )
+	if ( metaCache.notes.length === 0 ) {
+		const notesSnap = await getDocs(
+			collection( db, 'users', auth.currentUser.uid, 'notes' )
 		);
 
-		metaCache.memos = memosSnap.docs.map( d => {
+		metaCache.notes = notesSnap.docs.map( d => {
 			const m = d.data();
 			return {
 				id: d.id,
@@ -303,7 +322,7 @@ async function loadMetaOnce() {
 	}
 
 	// 🧠 正規化（壊れたデータ防止）
-	metaCache.memos.forEach( m => {
+	metaCache.notes.forEach( m => {
 		if ( typeof m.deleted !== 'boolean' ) {
 			m.deleted = false;
 			metaWasFixed = true;
@@ -335,7 +354,7 @@ async function loadMetaOnce() {
 	if ( metaWasFixed ) {
 		await setDoc( metaRef, metaCache );
 	}
-	metaCache.totalSize = metaCache.memos.reduce(
+	metaCache.totalSize = metaCache.notes.reduce(
 		//  (sum, m) => sum + (m.deleted ? 0 : (m.size || 0)),
 		( sum, m ) => sum + ( m.size || 0 ),
 		0
@@ -448,11 +467,11 @@ function htmlToMarkdown( html ) {
 
 	return traverseChildren( doc.body ).trim();
 }
-async function loadMemos() {
+async function loadNotes() {
 	await loadMetaOnce();
-	memoList.innerHTML = '';
+	noteList.innerHTML = '';
 
-	metaCache.memos
+	metaCache.notes
 		.filter( m => !m.deleted )
 		.sort( ( a, b ) => b.updated - a.updated )
 		.forEach( m => {
@@ -460,14 +479,14 @@ async function loadMemos() {
 			const li = document.createElement( 'li' );
 			li.style.fontSize = savedSize + 'px'; // ← 一覧に反映
 			// 🔹 現在開いているメモに active クラス
-			if ( m.id === currentMemoId ) {
+			if ( m.id === currentNoteId ) {
 				li.classList.add( 'active' );
 			}
 
 			/* ========== li 全体を覆う a ========== */
 			const link = document.createElement( 'a' );
 			link.href = `#/editor/${m.id}`;
-			link.className = 'memo-link';
+			link.className = 'note-link';
 			link.style.position = 'absolute';
 			link.style.top = '0';
 			link.style.left = '0';
@@ -490,14 +509,14 @@ async function loadMemos() {
 			//左側タイトル
 
 			const titleSpan = document.createElement( 'span' );
-			titleSpan.className = 'memo-title';
+			titleSpan.className = 'note-title';
 			titleSpan.textContent = m.title || 'New Note';
 			// titleSpan.style.fontSize = savedSize;
 			li.appendChild( titleSpan );
 
 			// 右側（日付 + メニュー）
 			const rightDiv = document.createElement( 'div' );
-			rightDiv.className = 'memo-right';
+			rightDiv.className = 'note-right';
 			const sizeSpan = document.createElement( 'span' );
 			sizeSpan.className = 'size-span';
 			sizeSpan.textContent = formatSize( m.size || 0 );
@@ -548,9 +567,9 @@ async function loadMemos() {
 				e.stopPropagation();
 
 				// メモの内容をキャッシュから取得（なければ Firestore 取得）
-				let content = memoCache[m.id]?.content;
+				let content = noteCache[m.id]?.content;
 				if ( !content ) {
-					// const snap = await getDoc(doc(db, 'users', auth.currentUser.uid, 'memos', m.id));
+					// const snap = await getDoc(doc(db, 'users', auth.currentUser.uid, 'notes', m.id));
 					// content = snap.data()?.content || '';
 					showToast( '一度メモを開いてください' );
 					return;
@@ -578,7 +597,7 @@ async function loadMemos() {
 				m.deleted = true;
 				m.updated = Date.now();
 				await saveMeta();
-				loadMemos();
+				loadNotes();
 				showToast( `${m.title || 'New Note'} was Moved to Trash` );
 				menuPopup.style.display = 'none';
 			};
@@ -600,10 +619,10 @@ async function loadMemos() {
 			//aタグの中に右側も入れる
 			li.appendChild( rightDiv );
 			//li に a を追加
-			memoList.appendChild( li );
+			noteList.appendChild( li );
 		} );
 	renderTotalSize();
-	renderMemoCount();
+	renderNoteCount();
 }
 
 function openPinModal( m ) {
@@ -674,7 +693,7 @@ function openPinModal( m ) {
 		m.pinnedDate = time;
 
 		await saveMeta();
-		loadMemos();
+		loadNotes();
 		close();
 	};
 
@@ -683,7 +702,7 @@ function openPinModal( m ) {
 		delete m.pinnedDate;
 
 		await saveMeta();
-		loadMemos();
+		loadNotes();
 		close();
 	};
 	// ===== 伝播完全遮断 =====
@@ -712,10 +731,10 @@ function openPinModal( m ) {
 
 /* Trash表示 */
 function loadTrash() {
-	if ( !metaCache || !Array.isArray( metaCache.memos ) ) return;
+	if ( !metaCache || !Array.isArray( metaCache.notes ) ) return;
 	trashList.innerHTML = '';
 
-	metaCache.memos
+	metaCache.notes
 		.filter( m => m.deleted )
 		.sort( ( a, b ) => b.updated - a.updated )
 		.forEach( m => {
@@ -742,7 +761,7 @@ function loadTrash() {
 			 ===================== */
 
 			const titleSpan = document.createElement( 'span' );
-			titleSpan.className = 'memo-title';
+			titleSpan.className = 'note-title';
 			titleSpan.textContent = m.title || 'New Note';
 			li.appendChild( titleSpan );
 
@@ -751,7 +770,7 @@ function loadTrash() {
 			 右側（日付 + メニュー）
 			 ===================== */
 			const rightDiv = document.createElement( 'div' );
-			rightDiv.className = 'memo-right';
+			rightDiv.className = 'note-right';
 			const sizeSpan = document.createElement( 'span' );
 			sizeSpan.className = 'size-span';
 			sizeSpan.textContent = formatSize( m.size || 0 );
@@ -773,7 +792,7 @@ function loadTrash() {
 				await updateMeta( m.id, { deleted: false, updated: Date.now() } );
 				loadTrash();
 				showToast( `${m.title || 'New Note'} was restored` );
-				await loadMemos(); // メモ一覧も更新
+				await loadNotes(); // メモ一覧も更新
 			};
 
 			// ⋯ メニュー
@@ -790,9 +809,9 @@ function loadTrash() {
 			delBtn.onclick = async e => {
 				e.stopPropagation();
 				// Firestoreのドキュメントを削除
-				await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'memos', m.id ) );
+				await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
 				// meta からも削除
-				metaCache.memos = metaCache.memos.filter( mm => mm.id !== m.id );
+				metaCache.notes = metaCache.notes.filter( mm => mm.id !== m.id );
 				await saveMeta();
 				loadTrash();
 				showToast( `${m.title || 'New Note'} was deleted permanently` );
@@ -814,16 +833,16 @@ function loadTrash() {
 }
 //メモidからエディターを開く関数
 async function openEditor( id ) {
-	memoLoaded = false;
+	noteLoaded = false;
 	editor.contentEditable = false;
-	currentMemoId = id;
-	if ( memoCache[id] ) {
-		showEditor( memoCache[id] );
+	currentNoteId = id;
+	if ( noteCache[id] ) {
+		showEditor( noteCache[id] );
 		return;
 	}
-	const snap = await getDoc( doc( db, 'users', auth.currentUser.uid, 'memos', id ) );
+	const snap = await getDoc( doc( db, 'users', auth.currentUser.uid, 'notes', id ) );
 	const data = snap.data();
-	memoCache[id] = data;
+	noteCache[id] = data;
 	localUpdated = data.updated || 0;
 	showEditor( data );
 }
@@ -849,34 +868,33 @@ async function showEditor( data ) {
 		sel.removeAllRanges();
 		sel.addRange( range );
 	}
-	updateTimestamp( currentMemoId );
+	updateTimestamp( currentNoteId );
 	show( 'editor' );
 	window.scrollTo( 0, 0 );
 
 	// DOM更新完了後に編集可能にする
 	requestAnimationFrame( () => {
-		memoLoaded = true;
+		noteLoaded = true;
 		// editor.contentEditable = true;
 	} );
 }
 // --- タイムスタンプ更新関数 ---
-function updateTimestamp( memoId ) {
-	const meta = getMeta( memoId );
+function updateTimestamp( noteId ) {
+	const meta = getMeta( noteId );
 	if ( !meta ) return;
 	const time = new Date( meta.updated );
 	timestampEl.textContent = formatDateTime( time );
 	timestampEl.classList.add( 'visible' );
 }
 
-//5️⃣-2 メモ関連の処理の関数（loadMeta, loadMemos, openEditor, saveMemo, updateMeta など）
+//5️⃣-2 メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 
-async function saveMemo() {
-	if ( !currentMemoId ) return;
+async function saveNote() {
+	if ( !currentNoteId ) return;
 
 	const content = editor.innerHTML;
 	const size = new Blob( [content] ).size;
 	const updated = Date.now();
-	const hasContent = content !== '<div><br></div>';
 
 	// タイトルを最初の行にする
 	const lines = editor.innerText.split( '\n' );
@@ -888,8 +906,8 @@ async function saveMemo() {
 			break;
 		}
 	}
-	const memoRef = doc( db, 'users', auth.currentUser.uid, 'memos', currentMemoId );
-	const snap = await getDoc( memoRef );
+	const noteRef = doc( db, 'users', auth.currentUser.uid, 'notes', currentNoteId );
+	const snap = await getDoc( noteRef );
 	const serverData = snap.exists() ? snap.data() : null;
 
 
@@ -983,7 +1001,7 @@ async function saveMemo() {
 
 		if ( choice === 'server' ) {
 			// サーバー内容で上書き
-			memoCache[currentMemoId] = serverData;
+			noteCache[currentNoteId] = serverData;
 			showEditor( serverData );
 			localUpdated = serverData.updated;
 			timestampEl.textContent = formatDateTime( new Date( localUpdated ) );
@@ -997,23 +1015,23 @@ async function saveMemo() {
 	}
 
 	// Firestore 保存（現在内容で上書き）
-	await setDoc( memoRef, { content, updated }, { merge: true } );
+	await setDoc( noteRef, { content, updated }, { merge: true } );
 	localUpdated = updated; // 保存したので端末保持の時刻も更新
 
 
-	// meta 更新（タイトル・size・edited）
-	await updateMeta( currentMemoId, { updated, edited: 1, size, title, hasContent } );
+	// meta 更新（タイトル・size）
+	await updateMeta( currentNoteId, { updated, size, title } );
 
-	// memoCache も同期
-	memoCache[currentMemoId] = {
-		...( memoCache[currentMemoId] || {} ),
+	// noteCache も同期
+	noteCache[currentNoteId] = {
+		...( noteCache[currentNoteId] || {} ),
 		content,
 		updated,
 		title,
 	};
 
 	// total size 更新
-	metaCache.totalSize = metaCache.memos.reduce(
+	metaCache.totalSize = metaCache.notes.reduce(
 		( sum, m ) => sum + ( m.deleted ? 0 : ( m.size || 0 ) ),
 		0
 	);
@@ -1030,7 +1048,7 @@ async function saveMeta() {
 }
 
 function getMeta( id ) {
-	return metaCache.memos.find( m => m.id === id );
+	return metaCache.notes.find( m => m.id === id );
 }
 
 async function updateMeta( id, fields ) {
@@ -1041,22 +1059,22 @@ async function updateMeta( id, fields ) {
 }
 async function fixSizesOnce() {
 	let fixed = false;
-	const memosToCheck = metaCache.memos.filter( m => !m.size || m.size <= 0 );
-	if ( memosToCheck.length === 0 ) return;
+	const notesToCheck = metaCache.notes.filter( m => !m.size || m.size <= 0 );
+	if ( notesToCheck.length === 0 ) return;
 
 	// Firestore getDocs でまとめて取得
-	const memoRefs = memosToCheck.map( m => doc( db, 'users', auth.currentUser.uid, 'memos', m.id ) );
-	const snaps = await Promise.all( memoRefs.map( ref => getDoc( ref ) ) );
+	const noteRefs = notesToCheck.map( m => doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
+	const snaps = await Promise.all( noteRefs.map( ref => getDoc( ref ) ) );
 
 	snaps.forEach( ( snap, i ) => {
 		if ( !snap.exists() ) return;
 		const content = snap.data().content || '';
-		memosToCheck[i].size = new Blob( [content] ).size;
+		notesToCheck[i].size = new Blob( [content] ).size;
 		fixed = true;
 	} );
 
 	if ( fixed ) {
-		metaCache.totalSize = metaCache.memos.reduce(
+		metaCache.totalSize = metaCache.notes.reduce(
 			( sum, m ) => sum + ( m.deleted ? 0 : ( m.size || 0 ) ),
 			0
 		);
@@ -1087,8 +1105,8 @@ function isLargeSize( bytes = 0 ) {
 //6️⃣ エディターイベント（入力、貼り付け、キーボード操作）
 
 editor.addEventListener( 'input', () => {
-	if ( !currentMemoId ) return;
-	const meta = getMeta( currentMemoId ); // ← ここで取得
+	if ( !currentNoteId ) return;
+	const meta = getMeta( currentNoteId ); // ← ここで取得
 	if ( !meta ) return; // もし存在しなければ中断
 	// 入力中は "..." を表示
 	saveStatus.style.color = '#999';
@@ -1099,10 +1117,10 @@ editor.addEventListener( 'input', () => {
 	clearTimeout( saveTimer );
 	saveTimer = setTimeout( async () => {
 
-		const saved = await saveMemo();
+		const saved = await saveNote();
 		if ( !saved ) return;
 		if ( meta ) {
-			await updateMeta( currentMemoId, {
+			await updateMeta( currentNoteId, {
 				title: meta.title,
 				updated: localUpdated,
 				size: meta.size
@@ -1558,7 +1576,7 @@ editor.addEventListener( 'copy', e => {
 //PCではmousedown,mouseup,click,blurの順に起こる
 editor.addEventListener( 'touchstart', e => {
 	isTouchDevice = true;
-	if ( !memoLoaded ) {
+	if ( !noteLoaded ) {
 		e.preventDefault();  // ロード前は一切操作させない
 		return;
 	}
@@ -1581,7 +1599,7 @@ editor.addEventListener( 'touchstart', e => {
 editor.addEventListener( 'touchend', () => {
 	// 🔒 リンクプレビュー後は何もしない
 	if ( longPress ) return;
-	if ( !memoLoaded ) return;      // ← ロード完了前は無視
+	if ( !noteLoaded ) return;      // ← ロード完了前は無視
 	if ( editor.contentEditable === 'true' ) return;
 
 	if ( requireDoubleTap ) {
@@ -1597,7 +1615,7 @@ editor.addEventListener( 'touchend', () => {
 } );
 
 function enableEdit() {
-	if ( memoLoaded !== true ) return; // ← ロード前は編集不可
+	if ( noteLoaded !== true ) return; // ← ロード前は編集不可
 	// まず editable にする
 	editor.contentEditable = 'true';
 	requireDoubleTap = false;
@@ -1625,7 +1643,7 @@ editor.addEventListener( 'mousedown', e => {
 	if ( isTouchDevice ) return;
 	// 長押しやリンククリックは除外
 	if ( e.target.closest( 'a' ) || e.target.closest( 'img' ) || e.target.closest( 'iframe' ) ) return;
-	if ( !memoLoaded ) {
+	if ( !noteLoaded ) {
 		// ロード中なら絶対に編集不可
 		e.preventDefault();
 		e.stopPropagation();
@@ -1718,18 +1736,18 @@ editor.addEventListener( 'keydown', ( e ) => {
 document.getElementById( 'go-trash' ).onclick = () => { location.hash = '#/trash'; closeSidebar(); }
 document.getElementById( 'go-list' ).onclick = () => { location.hash = '#/list'; closeSidebar(); }
 
-/* New memo button */
-document.getElementById( 'new-memo' ).onclick = async () => {
+/* New note button */
+document.getElementById( 'new-note' ).onclick = async () => {
 	requireDoubleTap = false;
 	await loadMetaOnce(); // ← 必ず先に呼ぶ
 	// 本文ドキュメントを1件だけ作る
 	const ref = await addDoc(
-		collection( db, 'users', auth.currentUser.uid, 'memos' ),
+		collection( db, 'users', auth.currentUser.uid, 'notes' ),
 		{ title: '', content: '', updated: Date.now() }
 	);
 
 	// meta（目次箱）に追加
-	metaCache.memos.push( {
+	metaCache.notes.push( {
 		id: ref.id,
 		title: '',
 		updated: Date.now(),
@@ -1746,8 +1764,8 @@ document.getElementById( 'new-memo' ).onclick = async () => {
 	location.hash = `#/editor/${ref.id}`;
 	closeSidebar();
 };
-document.getElementById( 'new-memo-2' ).onclick =
-	document.getElementById( 'new-memo' ).onclick;
+document.getElementById( 'new-note-2' ).onclick =
+	document.getElementById( 'new-note' ).onclick;
 /* Navigation */
 async function navigate() {
 	if ( !auth.currentUser ) {
@@ -1771,21 +1789,21 @@ async function navigate() {
 		const emptyTrashBtn = document.getElementById( 'empty-trash-btn' );
 		if ( emptyTrashBtn ) {
 			emptyTrashBtn.onclick = async () => {
-				if ( !metaCache || !Array.isArray( metaCache.memos ) ) return;
+				if ( !metaCache || !Array.isArray( metaCache.notes ) ) return;
 
 				// ★ 確認ダイアログ ★
 				const ok = confirm( "Trash内のすべてのメモを完全削除します。本当によろしいですか？" );
 				if ( !ok ) return; // キャンセルなら何もしない
 
-				const trashMemos = metaCache.memos.filter( m => m.deleted );
-				for ( const m of trashMemos ) {
+				const trashNotes = metaCache.notes.filter( m => m.deleted );
+				for ( const m of trashNotes ) {
 					// 完全削除
-					await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'memos', m.id ) );
+					await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
 				}
 
 
 				// meta からも削除
-				metaCache.memos = metaCache.memos.filter( m => !m.deleted );
+				metaCache.notes = metaCache.notes.filter( m => !m.deleted );
 				await saveMeta();
 
 				loadTrash();
@@ -1796,6 +1814,6 @@ async function navigate() {
 	} else {
 		await loadMetaOnce();           // list だけ
 		show( 'list' );
-		await loadMemos();
+		await loadNotes();
 	}
 }

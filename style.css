@@ -211,7 +211,7 @@ body.dark li:hover {
 background: #101010;
 }
 
-li .memo-title {
+li .note-title {
 font-weight: 610;
 flex: 1;
 white-space: nowrap;
@@ -220,12 +220,12 @@ text-overflow: ellipsis;
 margin-right: 8px;
 }
 
-#memo-list li.active {
+#note-list li.active {
 background-color: rgb(240, 240, 240);
 border-left: 4px solid #0071e3;
 }
 
-body.dark #memo-list li.active {
+body.dark #note-list li.active {
 background-color: rgb(28, 28, 28);
 }
 
@@ -257,7 +257,7 @@ margin: 4px 0 8px;
 text-align: right;
 }
 
-.memo-count {
+.note-count {
 font-size: 12px;
 opacity: 0.7;
 margin: 4px 0 8px;
@@ -294,7 +294,7 @@ body.dark .menu-btn:hover,
 background: rgba(255, 255, 255, 0.025);
 }
 
-.memo-right {
+.note-right {
 display: flex;
 justify-content: space-between;
 width: 100%;
@@ -507,7 +507,7 @@ body.dark .logo-img {
 border: 2px solid #ffffff;
 }
 
-#new-memo {
+#new-note {
 position: fixed;
 right: 20px;
 bottom: 20px;
@@ -525,7 +525,7 @@ z-index: 1000;
 
 /* ビューポートが親幅を超える場合に調整 */
 @media (min-width: 800px) {
-#new-memo {
+#new-note {
 /* 親要素右端から16px */
 right: calc((100% - 800px)/2 + 20px);
 }
