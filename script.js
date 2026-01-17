@@ -256,15 +256,29 @@ onAuthStateChanged( auth, async user => {
 
 	await navigate(); // ← 必ず呼ぶ
 	sidebarToggle.style.display = 'block';
+console.log(UserKey(auth.currentUser))
 
 } );
 window.addEventListener( 'hashchange', ( e ) => {
 	if ( auth.currentUser ) {
 		navigate();
+
 	}
 } );
+function getEmailPrefix(email) {
+  if (!email) return 'user';
+  // @より前を取得
+  let prefix = email.split('@')[0];
+  // 英数字以外は削除（ピリオド・記号を取り除く）
+  prefix = prefix.replace(/[^a-zA-Z0-9]/g, '');
+  return prefix;
+}
 
-
+function UserKey(user) {
+  const prefix = getEmailPrefix(user.email || '');
+  const uid = user.uid; // UID は末尾に追加
+  return `${prefix}-${uid}`;
+}
 //5️⃣ メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 function renderTotalSize() {
 	const el = document.getElementById( 'total-size' );
@@ -288,7 +302,7 @@ async function loadMetaOnce() {
 
 	let metaWasFixed = false;
 
-	const metaRef = doc( db, 'users', auth.currentUser.uid, 'meta', 'main' );
+	const metaRef = doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' );
 	const snap = await getDoc( metaRef );
 
 	if ( snap.exists() ) {
@@ -305,7 +319,7 @@ async function loadMetaOnce() {
 	// 🔁 meta が空なら Firestore から1回だけ復元
 	if ( metaCache.notes.length === 0 ) {
 		const notesSnap = await getDocs(
-			collection( db, 'users', auth.currentUser.uid, 'notes' )
+			collection( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes' )
 		);
 
 		metaCache.notes = notesSnap.docs.map( d => {
@@ -569,7 +583,7 @@ async function loadNotes() {
 				// メモの内容をキャッシュから取得（なければ Firestore 取得）
 				let content = noteCache[m.id]?.content;
 				if ( !content ) {
-					// const snap = await getDoc(doc(db, 'users', auth.currentUser.uid, 'notes', m.id));
+					// const snap = await getDoc(doc(db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id));
 					// content = snap.data()?.content || '';
 					showToast( '一度メモを開いてください' );
 					return;
@@ -809,7 +823,7 @@ function loadTrash() {
 			delBtn.onclick = async e => {
 				e.stopPropagation();
 				// Firestoreのドキュメントを削除
-				await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
+				await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 				// meta からも削除
 				metaCache.notes = metaCache.notes.filter( mm => mm.id !== m.id );
 				await saveMeta();
@@ -840,7 +854,7 @@ async function openEditor( id ) {
 		showEditor( noteCache[id] );
 		return;
 	}
-	const snap = await getDoc( doc( db, 'users', auth.currentUser.uid, 'notes', id ) );
+	const snap = await getDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', id ) );
 	const data = snap.data();
 	noteCache[id] = data;
 	localUpdated = data.updated || 0;
@@ -906,7 +920,7 @@ async function saveNote() {
 			break;
 		}
 	}
-	const noteRef = doc( db, 'users', auth.currentUser.uid, 'notes', currentNoteId );
+	const noteRef = doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', currentNoteId );
 	const snap = await getDoc( noteRef );
 	const serverData = snap.exists() ? snap.data() : null;
 
@@ -1042,7 +1056,7 @@ async function saveNote() {
 
 async function saveMeta() {
 	await setDoc(
-		doc( db, 'users', auth.currentUser.uid, 'meta', 'main' ),
+		doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
 		metaCache
 	);
 }
@@ -1063,7 +1077,7 @@ async function fixSizesOnce() {
 	if ( notesToCheck.length === 0 ) return;
 
 	// Firestore getDocs でまとめて取得
-	const noteRefs = notesToCheck.map( m => doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
+	const noteRefs = notesToCheck.map( m => doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 	const snaps = await Promise.all( noteRefs.map( ref => getDoc( ref ) ) );
 
 	snaps.forEach( ( snap, i ) => {
@@ -1742,7 +1756,7 @@ document.getElementById( 'new-note' ).onclick = async () => {
 	await loadMetaOnce(); // ← 必ず先に呼ぶ
 	// 本文ドキュメントを1件だけ作る
 	const ref = await addDoc(
-		collection( db, 'users', auth.currentUser.uid, 'notes' ),
+		collection( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes' ),
 		{ title: '', content: '', updated: Date.now() }
 	);
 
@@ -1756,7 +1770,7 @@ document.getElementById( 'new-note' ).onclick = async () => {
 
 	// meta保存
 	await setDoc(
-		doc( db, 'users', auth.currentUser.uid, 'meta', 'main' ),
+		doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
 		metaCache
 	);
 
@@ -1798,7 +1812,7 @@ async function navigate() {
 				const trashNotes = metaCache.notes.filter( m => m.deleted );
 				for ( const m of trashNotes ) {
 					// 完全削除
-					await deleteDoc( doc( db, 'users', auth.currentUser.uid, 'notes', m.id ) );
+					await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 				}
 
 
