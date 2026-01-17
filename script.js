@@ -39,7 +39,6 @@ const views = {
 const noteList = document.getElementById( 'note-list' );
 const trashList = document.getElementById( 'trash-list' );
 const editor = document.getElementById( 'editor' );
-const editorEl = document.getElementById( 'editor' );
 
 const userIcon = document.getElementById( 'user-icon' );
 const userIcon2 = document.getElementById( 'user-icon2' );
@@ -135,8 +134,8 @@ fontSlider.oninput = e => {
 	const size = fontSlider.value + 'px';
 	// body全体、に文字サイズを反映
 	document.body.style.fontSize = size;
-	// editorElはHTMLのid editorのこと
-	editorEl.style.fontSize = size;
+	// editorはHTMLのid editorのこと
+	editor.style.fontSize = size;
 	//一覧画面もサイズ反映
 	noteList.querySelectorAll( 'li' ).forEach( li => {
 		li.style.fontSize = size;
@@ -151,7 +150,7 @@ fontSlider.oninput = e => {
 const savedSize = localStorage.getItem( 'dreadnote-font-size' );
 //端末に初期値があればそれにする　ずれの原因これじゃね？まあいいや
 if ( savedSize ) {
-	editorEl.style.fontSize = savedSize + 'px';
+	editor.style.fontSize = savedSize + 'px';
 	fontSlider.value = savedSize;
 	fontValue.textContent = savedSize + 'px';
 	noteList.querySelectorAll( 'li' ).forEach( li => li.style.fontSize = savedSize + 'px' );
