@@ -31,7 +31,7 @@ getRedirectResult( auth ).catch( () => { } );
 // すなわちHTML内の各要素（ログイン画面、一覧画面、ゴミ箱画面、エディター画面）を変数に格納する
 const views = {
 	login: document.getElementById( 'view-login' ),
-	list: document.getElementById( 'view-list' ) || document.querySelector( '#sidebar #view-list' ),
+	home: document.getElementById( 'view-home' ) || document.querySelector( '#sidebar #view-home' ),
 	trash: document.getElementById( 'view-trash' ),
 	editor: document.getElementById( 'view-editor' )
 };
@@ -250,7 +250,7 @@ onAuthStateChanged( auth, async user => {
 
 	// ★ 必ずここで遷移処理
 	if ( !location.hash || location.hash === '#login' ) {
-		location.hash = '#/list';
+		location.hash = '#/home';
 	}
 
 	await navigate(); // ← 必ず呼ぶ
@@ -1747,7 +1747,7 @@ editor.addEventListener( 'keydown', ( e ) => {
 
 /* 7️⃣ ナビゲーション・新規作成ボタン*/
 document.getElementById( 'go-trash' ).onclick = () => { location.hash = '#/trash'; closeSidebar(); }
-document.getElementById( 'go-list' ).onclick = () => { location.hash = '#/list'; closeSidebar(); }
+document.getElementById( 'go-home' ).onclick = () => { location.hash = '#/home'; closeSidebar(); }
 
 /* New note button */
 document.getElementById( 'new-note' ).onclick = async () => {
@@ -1826,7 +1826,7 @@ async function navigate() {
 
 	} else {
 		await loadMetaOnce();           // list だけ
-		show( 'list' );
+		show( 'home' );
 		await loadNotes();
 	}
 }
