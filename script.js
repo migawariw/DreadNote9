@@ -193,7 +193,7 @@ if (darkOn === null) {
   darkOn = darkOn === '1';
 }
 
-console.log('Dark mode:', darkOn);
+// console.log('Dark mode:', darkOn);
 //ダークモードにするかどうかは端末に保存
 if ( darkBtn ) {
 	darkBtn.textContent = darkOn ? 'Light mode' : 'Dark mode';
@@ -276,7 +276,7 @@ onAuthStateChanged( auth, async user => {
 
 	await navigate(); // ← 必ず呼ぶ
 	sidebarToggle.style.display = 'block';
-console.log(UserKey(auth.currentUser))
+// console.log(UserKey(auth.currentUser))
 
 } );
 window.addEventListener( 'hashchange', ( e ) => {
