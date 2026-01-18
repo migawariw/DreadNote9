@@ -388,7 +388,7 @@ font-size: 18px;
 text-align: right;
 }
 .menu-panel button:hover {
-background: #f2f2f7;
+background: #f1f5ff;
 z-index: 3;
 }
 body.dark .menu-panel {

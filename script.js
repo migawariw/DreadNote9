@@ -90,6 +90,7 @@ function formatDateTime( date ) {
 }
 
 sidebarToggle.onclick = async () => {
+
 	sidebar.classList.toggle( 'show' );
 
 	// サイドバーを開いたらメモ一覧をロード
@@ -97,7 +98,9 @@ sidebarToggle.onclick = async () => {
 	if ( sidebar.classList.contains( 'show' ) ) {
 		requireDoubleTap = true; // ← ★リセット
 		await loadMetaOnce();   // まず metaCache をロード
-		await loadNotes();      // メモ一覧を描画
+		await loadNotes(currentSort);      // メモ一覧を描画
+		// ✅ 念押しで sidebar の font を更新
+    applySidebarFontSize(savedSize);
 	}
 };
 function closeSidebar() {
@@ -148,25 +151,27 @@ fontBtn.onclick = e => {
 	if ( !isOpen ) fontPopup.style.display = 'block';
 	closeSidebar();
 };
-// スライダーが確定されたら文字サイズ変更
-fontSlider.oninput = e => {
-	const size = fontSlider.value + 'px';
-	// body全体、に文字サイズを反映
-	document.body.style.fontSize = size;
-	// editorはHTMLのid editorのこと
-	editor.style.fontSize = size;
-	//一覧画面もサイズ反映
-	noteList.querySelectorAll( 'li' ).forEach( li => {
-		li.style.fontSize = size;
-	} );
-	//スライダーの横の文字も反映
-	fontValue.textContent = size;
-	//その端末にフォントサイズが残る
-	localStorage.setItem( 'dreadnote-font-size', fontSlider.value );
-};
+let savedSize = localStorage.getItem('dreadnote-font-size') || 18;
+function applyFontSize(size) {
+  const px = size + 'px';
 
-// 端末から反映
-const savedSize = localStorage.getItem( 'dreadnote-font-size' );
+  document.body.style.fontSize = px;
+  editor.style.fontSize = px;
+
+  // sidebar（存在する分だけ）
+  noteList.querySelectorAll('li').forEach(li => {
+    li.style.fontSize = px;
+  });
+
+  fontSlider.value = size;
+  fontValue.textContent = px;
+}
+fontSlider.oninput = e => {
+  savedSize = Number(fontSlider.value);
+
+  applyFontSize(savedSize);
+  localStorage.setItem('dreadnote-font-size', savedSize);
+};
 //端末に初期値があればそれにする　ずれの原因これじゃね？まあいいや
 if ( savedSize ) {
 	editor.style.fontSize = savedSize + 'px';
