@@ -428,7 +428,7 @@ function updateSortMenuCheck() {// ページロードやメニューを開いた
 	} );
 }
 updateSortMenuCheck();// 最初に呼ぶ
-async function loadNotes( sortBy = 'pinned+updated' ) {//メモ一覧をサイドバーに表示する
+async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
 	metaCache.notes
@@ -634,7 +634,7 @@ async function loadNotes( sortBy = 'pinned+updated' ) {//メモ一覧をサイ�
 		} );
 	renderTotalSize();
 	renderNoteCount();
-
+updateSortButtonIcon();
 // 🔽 これを追加
 requestAnimationFrame(() => {
   const activeItem = noteList.querySelector('li.active');
@@ -909,6 +909,22 @@ async function showEditor( data ) {// dataからhtmlを表示する関数
 		noteLoaded = true;
 		// editor.contentEditable = true;
 	} );
+}
+function updateSortButtonIcon() {
+  switch (currentSort) {
+    case 'pinned+updated':
+      sortBtn.textContent = '』⇅'; // 固定 + 更新
+      break;
+    case 'pinned+created':
+      sortBtn.textContent = '』＋'; // 固定 + 作成
+      break;
+    case 'updated':
+      sortBtn.textContent = '⇅'; // 更新順
+      break;
+    case 'created':
+      sortBtn.textContent = '＋'; // 作成順
+      break;
+  }
 }
 function updateTimestamp( noteId ) {// --- タイムスタンプ更新関数 ---
 	const meta = getMeta( noteId );
@@ -1567,7 +1583,6 @@ editor.addEventListener( 'copy', e => {
 	}
 
 	let plainText = getPlainText( tempDiv );
-
 	// 最後の余分な改行を削除
 	plainText = plainText.replace( /\n+$/g, '' );
 
