@@ -520,6 +520,9 @@ async function loadNotes() {//メモ一覧をサイドバーに表示する
 				m.updated = Date.now();
 				await saveMeta();
 				loadNotes();
+				if (location.hash === '#/trash') {
+        loadTrash();
+    } 
 				showToast( `${m.title || 'New Note'} was Moved to Trash` );
 				menuPopup.style.display = 'none';
 				if (currentNoteId===m.id){
@@ -867,12 +870,13 @@ async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta
 			msg.style.margin = '0 0 16px';
 			msg.style.fontSize = '14px';
 			msg.style.color = '#333';
+
 			const btnLocal = document.createElement( 'button' );
-			btnLocal.textContent = `この画面の内容を保存\n（${new Date( localUpdated ).toLocaleString()}時点の内容を編集中）\n→別の画面の内容は消えます。\n`;
+
 			const btnServer = document.createElement( 'button' );
-			btnServer.textContent = `別の画面の内容を読み込む\n（${new Date( serverData.updated ).toLocaleString()}保存済み）\n→この画面の内容は消えます。\n`;
+
 			const btnNone = document.createElement( 'button' );
-			btnNone.textContent = '\n\n何もしない\n\n\n';
+
 			btnLocal.style.whiteSpace = 'pre-wrap';
 			btnServer.style.whiteSpace = 'pre-wrap';
 			btnNone.style.whiteSpace = 'pre-wrap';
@@ -892,7 +896,7 @@ async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta
 			btnLocal.style.color = '#155724';
 			btnLocal.innerHTML =
 				`<strong>この画面の内容を保存</strong><br>
-   <small>${new Date( localUpdated ).toLocaleString()} から編集中</small><br>
+   <!--<small>${new Date( localUpdated ).toLocaleString()} から編集中</small><br>-->
    <small>※他の画面の保存内容は消えます</small>`;
 			styleButton( btnServer );
 			btnServer.style.border = '2px solid #007bff';
@@ -1621,17 +1625,21 @@ editor.addEventListener( 'keydown', ( e ) => {
 newNote.onclick = async () => {
 	requireDoubleTap = false;
 	await loadMetaOnce(); // ← 必ず先に呼ぶ
+
+	// タイムスタンプを1回だけ生成
+	const now = Date.now();
 	// 本文ドキュメントを1件だけ作る
 	const ref = await addDoc(
 		collection( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes' ),
-		{ title: '', content: '', updated: Date.now() }
+		{ title: '', content: '', updated: now }
 	);
 
 	// meta（目次箱）に追加
 	metaCache.notes.push( {
 		id: ref.id,
 		title: '',
-		updated: Date.now(),
+		created: now,
+		updated: now,
 		deleted: false
 	} );
 
