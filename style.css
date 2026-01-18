@@ -533,7 +533,9 @@ z-index: 1000;
 right: calc((100% - 800px)/2 + 20px);
 }
 }
-
+#new-note :hover{
+    opacity: 0.9;
+}
 #editor {
 min-height: 70vh;
 padding-top: 30px;
