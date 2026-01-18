@@ -600,7 +600,6 @@ async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバ�
 			delBtn.onclick = async ( e ) => {
 				e.stopPropagation();
 				m.deleted = true;
-				m.updated = Date.now();
 				await saveMeta();
 				loadNotes();
 				if ( location.hash === '#/trash' ) {
@@ -816,7 +815,7 @@ function loadTrash() {/* Trash表示 */
 			restoreBtn.className = 'menu-btn';
 			restoreBtn.onclick = async e => {
 				e.stopPropagation();
-				await updateMeta( m.id, { deleted: false, updated: Date.now() } );
+				await updateMeta( m.id, { deleted: false } );
 				loadTrash();
 				showToast( `${m.title || 'New Note'} was restored` );
 				await loadNotes(); // メモ一覧も更新
