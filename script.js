@@ -629,6 +629,15 @@ async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバ�
 					menuPopup.style.display = 'block';
 				}
 			};
+			menuBtn.addEventListener('pointerdown', () => {
+  menuBtn.classList.add('pressed');
+});
+menuBtn.addEventListener('pointerup', () => {
+  menuBtn.classList.remove('pressed');
+});
+menuBtn.addEventListener('pointerleave', () => {
+  menuBtn.classList.remove('pressed');
+});
 
 			rightDiv.append( dateSpan, sizeSpan, menuBtn, menuPopup );
 			//aタグの中に右側も入れる

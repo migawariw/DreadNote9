@@ -291,7 +291,12 @@ body.dark .menu-btn:hover,
 .menu-btn:active {
 background: rgba(255, 255, 255, 0.025);
 } */
-
+ .menu-btn.pressed {
+  background: rgba(0, 0, 0, 0.04);
+}
+ body.dark .menu-btn.pressed {
+  background: rgba(255, 255, 255, 0.04);
+}
 .note-right {
 display: flex;
 justify-content: space-between;
