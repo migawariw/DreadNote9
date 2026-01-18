@@ -3,7 +3,7 @@ margin: 0;
 padding: 20px 20px 300px 20px;
 font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 font-size: 1rem;
-background: #ffffff;
+background: #fcfcfd;
 color: #1c1c1e;
 max-width: 100%;
 overflow-x: hidden;
@@ -108,7 +108,7 @@ top: 0;
 bottom: 0;
 width: 300px;
 height: 100dvh;
-background: #f9f9f9;
+background: #f4f5f7;
 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 transform: translateX(-100%);
 transition: transform 0.3s ease;
@@ -159,12 +159,8 @@ top: 10px;
 left: 10px;
 z-index: 1100;
 padding-top: 0;
-background: #f9f9f9;
 }
 
-body.dark #sidebar-toggle2 {
-background: #000000;
-}
 
 #sidebar .flex-between {
 position: sticky;
@@ -172,7 +168,7 @@ top: 0;
 left: 0;
 right: 0;
 z-index: 10;
-background: #f9f9f9;
+background: inherit;
 padding-bottom: 0px;
 }
 
@@ -204,14 +200,13 @@ text-decoration: none;
 color: inherit;
 z-index: 1;
 }
+/* li:hover {
+background: rgba(0, 0, 0, 0.04);
+} */
 
-li:hover {
-background: #fcfcfc;
-}
-
-body.dark li:hover {
+/* body.dark li:hover {
 background: #101010;
-}
+} */
 
 li .note-title {
 font-weight: 610;
@@ -223,7 +218,8 @@ margin-right: 8px;
 }
 
 #note-list li.active {
-background-color: rgb(240, 240, 240);
+/* background-color: rgb(240, 240, 240); */
+background: hsl(210, 4%, 91%);
 border-left: 4px solid #0071e3;
 }
 
@@ -286,7 +282,7 @@ border-color: #333;
 }
 
 /* 触った時だけ枠が出る */
-.menu-btn:hover,
+/* .menu-btn:hover,
 .menu-btn:active {
 background: rgba(0, 0, 0, 0.025);
 }
@@ -294,7 +290,7 @@ background: rgba(0, 0, 0, 0.025);
 body.dark .menu-btn:hover,
 .menu-btn:active {
 background: rgba(255, 255, 255, 0.025);
-}
+} */
 
 .note-right {
 display: flex;

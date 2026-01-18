@@ -634,15 +634,6 @@ async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバ�
 	renderTotalSize();
 	renderNoteCount();
 updateSortButtonIcon();
-// 🔽 これを追加
-requestAnimationFrame(() => {
-  const activeItem = noteList.querySelector('li.active');
-  if (activeItem) {
-    activeItem.scrollIntoView({
-      block: 'start',   // 'nearest' でもOK
-      behavior: 'auto'   // 'smooth' にしてもいい
-    });
-  }})
 }
 function getNoteDisplayTime( note, sortBy ) {// 🔹 表示時刻取得関数（sortSelect に連動）
 	switch ( sortBy ) {
