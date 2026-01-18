@@ -446,8 +446,9 @@ right: 0;
 }
 }
 
-#user-menu
-,#user-menu2 {
+#user-menu,
+#user-menu2,
+#sort-menu {
 position: absolute;
 /* position: fixed; */
 top: 70px;
@@ -464,13 +465,16 @@ overflow: hidden;
 }
 /* モバイルなど画面幅 < 800px の場合は右端16px固定 */
 @media (max-width: 799px) {
-#user-menu ,#user-menu2 {
+#user-menu,
+#user-menu2,
+#sort-menu{
 right: 0px;
 }
 }
 
 #user-menu button,
-#user-menu2 button  {
+#user-menu2 button,
+#sort-menu button {
 display: block;
 width: 100%;
 padding: 10px 16px;
@@ -482,22 +486,28 @@ font-size: 15px;
 }
 
 #user-menu button:hover,
-#user-menu2 button:hover {
+#user-menu2 button:hover,
+#sort-menu button:hover {
 background: #f2f2f7;
 z-index: 3;
 }
 
-body.dark #user-menu,body.dark #user-menu2 {
+body.dark #user-menu,
+body.dark #user-menu2,
+body.dark #sort-menu {
 background: #1c1c1e;
 border-color: #333;
 }
 
 body.dark #user-menu button,
-body.dark #user-menu2 button{
+body.dark #user-menu2 button,
+body.dark #sort-menu button{
 color: #007fff;
 }
 
-body.dark #user-menu button:hover,body.dark #user-menu2 button:hover {
+body.dark #user-menu button:hover,
+body.dark #user-menu2 button:hover,
+body.dark #sort-menu button:hover {
 background: #24242e;
 }
 

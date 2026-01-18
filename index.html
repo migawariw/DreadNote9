@@ -31,6 +31,15 @@
 		<div class="flex-between">
 			<h2 style="font-size: 32px;"><button id="sidebar-toggle2">＝</button></h2>
 			<div style="display:flex;gap:8px;align-items:center ;">
+				<div>
+					<button id="sort-btn" style="font-size: 26px;font-weight: 200;">⇅</button>
+					<div id="sort-menu">
+						<button data-value="pinned+updated">固定日時 + 更新日時順</button>
+						<button data-value="pinned+created">固定日時 + 作成日時順</button>
+						<button data-value="updated">更新日時順</button>
+						<button data-value="created">作成日時順</button>
+					</div>
+				</div>
 				<button id="new-note-2" style="font-size: 40px; margin-right: 12px; margin-left: 12px; 
  font-weight: 200; color: #0071e3;">＋</button>
 				<img id="user-icon" src="" title="User Menu">
@@ -65,8 +74,8 @@
 			<h1>DreadNote</h1>
 			<img id="user-icon2" src="">
 			<div id="user-menu2">
-					<button id="logout-btn">Log out</button>
-</div>
+				<button id="logout-btn">Log out</button>
+			</div>
 		</div>
 		<button id="new-note">
 			<img src="img1.png" class="logo-img" alt="Logo">

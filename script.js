@@ -41,6 +41,8 @@ const userIcon = document.getElementById( 'user-icon' );
 const userIcon2 = document.getElementById( 'user-icon2' );
 const userMenu = document.getElementById( 'user-menu' );
 const userMenu2 = document.getElementById( 'user-menu2' );
+const sortBtn = document.getElementById('sort-btn');
+const sortMenu = document.getElementById('sort-menu');
 const fontBtn = document.getElementById( 'font-size-btn' );
 const fontPopup = document.getElementById( 'font-size-popup' );
 const fontSlider = document.getElementById( 'font-size-slider' );
@@ -80,6 +82,7 @@ let currentNoteId = null;
 let noteLoaded = null;
 let localUpdated = 0;
 let hideStatusTimer = null;
+let currentSort = 'pinned+updated'; // 初期ソート
 
 // 3️⃣UI操作（フォント、ダークモード、トーストなど）
 function formatDateTime( date ) {
@@ -122,14 +125,22 @@ document.addEventListener( 'click', ( e ) => {
 
 	if ( !userMenu.contains( e.target ) && e.target !== userIcon ) userMenu.style.display = 'none';
 	if ( !userMenu2.contains( e.target ) && e.target !== userIcon2 ) userMenu2.style.display = 'none';
+	if ( !sortMenu.contains( e.target ) && e.target !== sortMenu ) sortMenu.style.display = 'none';
 	document.querySelectorAll( '.menu-popup' ).forEach( menu => {
 		const btn = menu.previousSibling;
 		if ( !menu.contains( e.target ) && !btn.contains( e.target ) ) menu.style.display = 'none';
 	} );
 } );
 
-userIcon.onclick = () => { userMenu.style.display = ( userMenu.style.display === 'block' ) ? 'none' : 'block'; }
+userIcon.onclick = () => { 
+	userMenu.style.display = ( 
+	userMenu.style.display === 'block' ) ? 'none' : 'block'; }
 userIcon2.onclick = () => { userMenu2.style.display = ( userMenu2.style.display === 'block' ) ? 'none' : 'block'; }
+sortBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // 画面クリックイベントに伝播させない
+    if (userMenu) userMenu.style.display = 'none';
+    sortMenu.style.display = (sortMenu.style.display === 'block') ? 'none' : 'block';
+});
 // Aa押した時の挙動
 fontBtn.onclick = e => {
 	//ボタンを親要素に影響させない
@@ -360,7 +371,6 @@ async function loadMetaOnce() {
 			m.size = 0;
 			metaWasFixed = true;
 		}
-		// 🔹 ここに追加
 		if ( typeof m.pinned !== 'boolean' ) {
 			m.pinned = false;
 			metaWasFixed = true;
@@ -369,6 +379,10 @@ async function loadMetaOnce() {
 			m.pinnedDate = null;
 			metaWasFixed = true;
 		}
+		if (!m.created) {
+        m.created = m.updated;
+        metaWasFixed = true;
+    }
 	} );
 
 	// ✅ 「直した時だけ」保存
@@ -390,12 +404,44 @@ function closeAllMenus() {//欄外タップで🗑️とかのメニュー閉じ
 		m.style.display = 'none';
 	} );
 }
-async function loadNotes() {//メモ一覧をサイドバーに表示する
+sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙動
+  btn.addEventListener('click', () => {
+    currentSort = btn.dataset.value; // 選択値を currentSort に保存
+    sortMenu.style.display = 'none';
+
+    // ボタン表示に反映
+    // sortBtn.textContent = btn.textContent;
+
+    // 再描画
+    loadNotes(currentSort);
+  });
+});
+async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
 	metaCache.notes
 		.filter( m => !m.deleted )
-		.sort( ( a, b ) => b.updated - a.updated )
+		.sort((a, b) => {
+      switch(sortBy) {
+        case 'pinned+updated': {
+          const aTime = a.pinnedDate || a.updated;
+          const bTime = b.pinnedDate || b.updated;
+          return bTime - aTime;
+        }
+        case 'pinned+created': {
+          const aTime = a.pinnedDate || a.created;
+          const bTime = b.pinnedDate || b.created;
+          return bTime - aTime;
+        }
+        case 'created': return b.created - a.created;
+        case 'updated': return b.updated - a.updated;
+        default: {
+          const aTime = a.pinnedDate || a.updated;
+          const bTime = b.pinnedDate || b.updated;
+          return bTime - aTime;
+        }
+      }
+    })
 		.forEach( m => {
 
 			const li = document.createElement( 'li' );
@@ -448,13 +494,13 @@ async function loadNotes() {//メモ一覧をサイドバーに表示する
 
 			const dateSpan = document.createElement( 'span' );
 			dateSpan.className = 'date-span';
-			const displayDate = m.pinned ? m.pinnedDate : m.updated;
+			const displayDate = getNoteDisplayTime(m, sortBy);
 			dateSpan.textContent = new Date( displayDate ).toLocaleString( 'ja-JP', {
 				year: 'numeric', month: '2-digit', day: '2-digit',
 				hour: '2-digit', minute: '2-digit'
 			} );
 			// 🔹 pinned ならマークを追加
-			if ( m.pinned ) {
+			 if ((sortBy === 'pinned+updated' || sortBy === 'pinned+created') && m.pinned) {
 				const pin = document.createElement( 'span' );
 				pin.textContent = '』';
 				pin.style.marginLeft = '4px';
@@ -551,6 +597,15 @@ async function loadNotes() {//メモ一覧をサイドバーに表示する
 		} );
 	renderTotalSize();
 	renderNoteCount();
+}
+function getNoteDisplayTime(note, sortBy) {// 🔹 表示時刻取得関数（sortSelect に連動）
+    switch(sortBy) {
+        case 'pinned+updated': return note.pinnedDate || note.updated;
+        case 'pinned+created': return note.pinnedDate || note.created;
+        case 'created': return note.created;
+        case 'updated': return note.updated;
+        default: return note.updated;
+    }
 }
 function openPinModal( m ) {//時刻固定のモーダル
 	// container を作る
