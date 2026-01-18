@@ -420,7 +420,6 @@ sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙�
     loadNotes(currentSort);
   });
 });
-
 // ページロードやメニューを開いた時に呼ぶ
 function updateSortMenuCheck() {
   sortMenu.querySelectorAll('button').forEach(b => {
@@ -527,14 +526,15 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 			menuBtn.className = 'menu-btn';
 
 			const menuPopup = document.createElement( 'div' );
-			menuPopup.className = 'menu-popup';
+			menuPopup.className = 'menu-popup menu-panel';
+			menuPopup.style.top='34px'
 			// 例えば右側の div を親にする場合
 			rightDiv.style.position = 'relative'; // 親に relative を付与
 
 
 			// 📌 ピンボタン
 			const pinBtn = document.createElement( 'button' );
-			pinBtn.textContent = m.pinned ? '』' : '』';
+			pinBtn.textContent = m.pinned ? '時刻固定解除』' : '時刻固定』';
 			pinBtn.onclick = ( e ) => {
 				e.stopPropagation();
 				menuPopup.style.display = 'none';
@@ -544,7 +544,7 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 
 
 			const copyBtn = document.createElement( 'button' );
-			copyBtn.textContent = '❐';
+			copyBtn.textContent = 'Copy as md';
 			copyBtn.onclick = async ( e ) => {
 				e.stopPropagation();
 
@@ -573,7 +573,8 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 			};
 
 			const delBtn = document.createElement( 'button' );
-			delBtn.textContent = '🗑️';
+			delBtn.textContent = 'Trash';
+			delBtn.style.color = 'red';
 			delBtn.onclick = async ( e ) => {
 				e.stopPropagation();
 				m.deleted = true;
@@ -795,11 +796,12 @@ function loadTrash() {/* Trash表示 */
 			menuBtn.className = 'menu-btn';
 
 			const menuPopup = document.createElement( 'div' );
-			menuPopup.className = 'menu-popup';
+			menuPopup.className = 'menu-panel menu-popup';
 
 			// 完全削除ボタン
 			const delBtn = document.createElement( 'button' );
 			delBtn.textContent = 'Delete Permanently';
+			delBtn.style.color = 'red';
 			delBtn.onclick = async e => {
 				e.stopPropagation();
 				// Firestoreのドキュメントを削除

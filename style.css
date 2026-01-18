@@ -301,48 +301,7 @@ width: 100%;
 line-height: 2;
 }
 
-.menu-popup {
-position: absolute;
-top: 35px;
-/* top: 100%; */
-right: -10px;
-background: #fff;
-border: 1px solid #ccc;
-padding: 6px 0;
-border-radius: 6px;
-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-display: none;
-z-index: 10;
-}
 
-body.dark .menu-popup {
-background: #1c1c1e;
-border-color: #333;
-}
-
-.menu-popup button {
-font-size: 17px;
-border-radius: 6px;
-width: auto;
-/* width: 100%; */
-text-align: left;
-padding: 8px 16px;
-background: none;
-border: none;
-cursor: pointer;
-}
-
-body.dark .menu-popup button {
-color: #f2f2f7;
-}
-
-.menu-popup button:hover {
-background: #eee;
-}
-
-body.dark .menu-popup button:hover {
-background: #333;
-}
 
 /* ===== フォントサイズポップアップ（ズレ防止） ===== */
 #font-size-popup {
@@ -358,8 +317,12 @@ border: 1px solid #ccc;
 padding: 12px;
 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 z-index: 10000;
+background: #fff;
+border-radius: 6px;
 }
-
+body.dark #font-size-popup{
+background: #000;
+}
 /* ===== スライダー行（高さ完全固定） ===== */
 #font-slider-wrap {
 height: 80px;
