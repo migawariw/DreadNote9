@@ -372,38 +372,26 @@ margin-left: 0;
 
 #user-icon,#user-icon2 {
 /* position: absolute; */
-/* position: fixed; */
 z-index: 10000;
 background: transparent;
 width: 40px;
 height: 40px;
-/* top: 0px; */
-/* top: 10px; */
 right: calc((100% - 800px)/2 + 0px);
-/* 親の右端から16px */
 border-radius: 50%;
 cursor: pointer;
 }
 
 /* モバイルなど画面幅 < 800px の場合は右端16px固定 */
 @media (max-width: 799px) {
-#user-icon {
-right: 0;
-}
-}
-
-@media (max-width: 799px) {
-#user-icon2 {
+#user-icon,#user-icon2 {
 right: 0;
 }
 }
 
 .menu-panel {
 position: absolute;
-/* position: fixed; */
 top: 70px;
 right: 0px;
-/* 親の右端から16px */
 background: #ffffff;
 border: 1px solid #ddd;
 border-radius: 8px;
@@ -413,12 +401,6 @@ white-space: nowrap;
 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 overflow: hidden;
 }
-/* モバイルなど画面幅 < 800px の場合は右端16px固定 */
-@media (max-width: 799px) {
-.menu-panel {
-right: 0px;
-}
-}
 .menu-panel button{
 display: block;
 width: 100%;
@@ -426,8 +408,8 @@ padding: 10px 16px;
 color: #0071e3;
 background: none;
 border: none;
-text-align: left;
 font-size: 18px;
+text-align: right;
 }
 
 .menu-panel button:hover {
@@ -437,9 +419,7 @@ z-index: 3;
 #sort-menu button.checked::before {
     content: '✔ ';  /* チェックマークを表示 */
 }
-#sort-menu button {
-  text-align: right;
-}
+
 body.dark .menu-panel {
 background: #131313;
 border-color: #333;

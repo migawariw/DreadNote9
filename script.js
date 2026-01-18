@@ -196,7 +196,7 @@ if (darkOn === null) {
 // console.log('Dark mode:', darkOn);
 //ダークモードにするかどうかは端末に保存
 if ( darkBtn ) {
-	darkBtn.textContent = darkOn ? 'Light mode' : 'Dark mode';
+	darkBtn.textContent = darkOn ? '　　Light mode' : 'Dark mode';
 	darkBtn.onclick = ( e ) => {
 		e.stopPropagation();
 		document.body.classList.toggle( 'dark' );
@@ -383,6 +383,11 @@ async function loadMetaOnce() {
         m.created = m.updated;
         metaWasFixed = true;
     }
+		// ⭐ favorite（お気に入り） ← 追加
+  if (typeof m.favorite !== 'boolean') {
+    m.favorite = false;
+    metaWasFixed = true;
+  }
 	} );
 
 	// ✅ 「直した時だけ」保存
@@ -420,21 +425,22 @@ sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙�
     loadNotes(currentSort);
   });
 });
-// ページロードやメニューを開いた時に呼ぶ
-function updateSortMenuCheck() {
+function updateSortMenuCheck() {// ページロードやメニューを開いた時に呼ぶ
   sortMenu.querySelectorAll('button').forEach(b => {
     b.classList.toggle('checked', b.dataset.value === currentSort);
   });
 }
-
-// 最初に呼ぶ
-updateSortMenuCheck();
+updateSortMenuCheck();// 最初に呼ぶ
 async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
 	metaCache.notes
 		.filter( m => !m.deleted )
 		.sort((a, b) => {
+			 // ① favorite を最優先
+  if (a.favorite !== b.favorite) {
+    return a.favorite ? -1 : 1;
+  }
       switch(sortBy) {
         case 'pinned+updated': {
           const aTime = a.pinnedDate || a.updated;
@@ -527,14 +533,33 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 
 			const menuPopup = document.createElement( 'div' );
 			menuPopup.className = 'menu-popup menu-panel';
-			menuPopup.style.top='34px'
+			menuPopup.style.top='2em'
+			menuPopup.style.right='-12px'
 			// 例えば右側の div を親にする場合
 			rightDiv.style.position = 'relative'; // 親に relative を付与
 
+			// ⭐ favorite ボタン（追加）
+const favBtn = document.createElement('button');
+favBtn.textContent = m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り';
+favBtn.onclick = async (e) => {
+  e.stopPropagation();
 
+  m.favorite = !m.favorite;
+
+  await saveMeta();          // 永続化
+  menuPopup.style.display = 'none';
+
+  loadNotes(currentSort);    // 並び即反映
+};
+if (m.favorite) {
+  const star = document.createElement('span');
+  star.textContent = '★';
+  star.style.marginRight = '4px';
+  titleSpan.prepend(star);
+}
 			// 📌 ピンボタン
 			const pinBtn = document.createElement( 'button' );
-			pinBtn.textContent = m.pinned ? '時刻固定解除』' : '時刻固定』';
+			pinBtn.textContent = m.pinned ? '』 時刻変更' : '』 時刻固定';
 			pinBtn.onclick = ( e ) => {
 				e.stopPropagation();
 				menuPopup.style.display = 'none';
@@ -591,7 +616,7 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 				}
 			};
 
-			menuPopup.append( pinBtn, copyBtn, delBtn );
+			menuPopup.append( favBtn,pinBtn, copyBtn, delBtn );
 			menuBtn.onclick = e => {
 				e.stopPropagation();
 
