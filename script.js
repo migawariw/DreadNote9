@@ -12,12 +12,12 @@ const noteCache = {};       // ← 本文キャッシュ
 
 // firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBOAzYlxRsAqlov_valRrOlYuD_O3irV6A",
-  authDomain: "dreadnote9-orion.firebaseapp.com",
-  projectId: "dreadnote9-orion",
-  storageBucket: "dreadnote9-orion.firebasestorage.app",
-  messagingSenderId: "52518748481",
-  appId: "1:52518748481:web:41bffae85624045e1261c0"
+	apiKey: "AIzaSyBOAzYlxRsAqlov_valRrOlYuD_O3irV6A",
+	authDomain: "dreadnote9-orion.firebaseapp.com",
+	projectId: "dreadnote9-orion",
+	storageBucket: "dreadnote9-orion.firebasestorage.app",
+	messagingSenderId: "52518748481",
+	appId: "1:52518748481:web:41bffae85624045e1261c0"
 };
 const app = initializeApp( firebaseConfig );
 const auth = getAuth( app );
@@ -32,33 +32,28 @@ const views = {
 	editor: document.getElementById( 'view-editor' )
 };
 //メモ一覧、ゴミ箱、エディター、ユーザーアイコン、メニュー等を表示する要素を取得している
-const logInBtn=document.getElementById( 'google-login' );
+const logInBtn = document.getElementById( 'google-login' );
 const noteList = document.getElementById( 'note-list' );
 const trashList = document.getElementById( 'trash-list' );
 const editor = document.getElementById( 'editor' );
-
 const userIcon = document.getElementById( 'user-icon' );
 const userIcon2 = document.getElementById( 'user-icon2' );
 const userMenu = document.getElementById( 'user-menu' );
 const userMenu2 = document.getElementById( 'user-menu2' );
-const sortBtn = document.getElementById('sort-btn');
-const sortMenu = document.getElementById('sort-menu');
+const sortBtn = document.getElementById( 'sort-btn' );
+const sortMenu = document.getElementById( 'sort-menu' );
 const fontBtn = document.getElementById( 'font-size-btn' );
 const fontPopup = document.getElementById( 'font-size-popup' );
 const fontSlider = document.getElementById( 'font-size-slider' );
 const fontValue = document.getElementById( 'font-size-value' );
 const spreadBtn = document.getElementById( 'spread-btn' );
 const darkBtn = document.getElementById( 'dark-btn' );
-const goHomeBtn =document.getElementById( 'go-home' );
-const goTrashBtn =document.getElementById( 'go-trash' );
-const logOutBtn=document.getElementById( 'logout-btn' );
-
+const goHomeBtn = document.getElementById( 'go-home' );
+const goTrashBtn = document.getElementById( 'go-trash' );
+const logOutBtn = document.getElementById( 'logout-btn' );
+const newNote = document.getElementById( 'new-note' );
+const newNote2 = document.getElementById( 'new-note-2' );
 const toast = document.getElementById( 'toast' );
-
-const newNote=document.getElementById( 'new-note' );
-const newNote2=document.getElementById( 'new-note-2' );
-
-
 const sidebar = document.getElementById( 'sidebar' );
 const sidebarToggle = document.getElementById( 'sidebar-toggle' );
 //2は閉じるボタン
@@ -66,7 +61,6 @@ const sidebarToggle2 = document.getElementById( 'sidebar-toggle2' );
 const saveIndicator = document.getElementById( 'saveIndicator' );
 const saveStatus = saveIndicator.querySelector( '.saveStatus' );
 const timestampEl = saveIndicator.querySelector( '.timestamp' );
-
 const emptyTrashBtn = document.getElementById( 'empty-trash-btn' );
 
 
@@ -113,44 +107,46 @@ sidebarToggle2.onclick = closeSidebar;
 goTrashBtn.onclick = () => { location.hash = '#/trash'; closeSidebar(); }
 goHomeBtn.onclick = () => { location.hash = '#/home'; closeSidebar(); }
 
-document.addEventListener( 'click', ( e ) => {
+document.addEventListener( 'click', e => {
 	if ( sidebar.classList.contains( 'show' ) && !sidebar.contains( e.target ) && e.target !== sidebarToggle ) {
 		sidebar.classList.remove( 'show' );
 	}
-
-	if ( !fontPopup.contains( e.target ) && e.target !== fontBtn ) {
-		fontPopup.style.display = 'none';
+	// menu-panel or それを開くボタンを押してないなら閉じる
+	if ( !e.target.closest( '.menu-panel' ) &&
+		!e.target.closest( '.menu-btn' ) &&
+		!e.target.closest( '#sort-btn' ) &&
+		!e.target.closest( '#font-size-btn' ) &&
+		!e.target.closest( '#user-icon' ) &&
+		!e.target.closest( '#user-icon2' ) ) {
+		closeAllMenus();
 	}
-	// 他の場所をクリックしたらメニューが閉じる
-
-	if ( !userMenu.contains( e.target ) && e.target !== userIcon ) userMenu.style.display = 'none';
-	if ( !userMenu2.contains( e.target ) && e.target !== userIcon2 ) userMenu2.style.display = 'none';
-	if ( !sortMenu.contains( e.target ) && e.target !== sortMenu ) sortMenu.style.display = 'none';
-	document.querySelectorAll( '.menu-popup' ).forEach( menu => {
-		const btn = menu.previousSibling;
-		if ( !menu.contains( e.target ) && !btn.contains( e.target ) ) menu.style.display = 'none';
-	} );
 } );
 
-userIcon.onclick = () => { 
-	userMenu.style.display = ( 
-	userMenu.style.display === 'block' ) ? 'none' : 'block'; }
-userIcon2.onclick = () => { userMenu2.style.display = ( userMenu2.style.display === 'block' ) ? 'none' : 'block'; }
-sortBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // 画面クリックイベントに伝播させない
-    if (userMenu) userMenu.style.display = 'none';
-    sortMenu.style.display = (sortMenu.style.display === 'block') ? 'none' : 'block';
-});
+userIcon.onclick = e => {
+	e.stopPropagation();
+	const isOpen = userMenu.style.display === 'block';
+	closeAllMenus();
+	if ( !isOpen ) userMenu.style.display = 'block';
+};
+userIcon2.onclick = e => {
+	e.stopPropagation();
+	const isOpen = userMenu2.style.display === 'block';
+	closeAllMenus();
+	if ( !isOpen ) userMenu2.style.display = 'block';
+};
+sortBtn.onclick = e => {
+	e.stopPropagation();
+	const isOpen = sortMenu.style.display === 'block';
+	closeAllMenus();
+	if ( !isOpen ) sortMenu.style.display = 'block';
+};
 // Aa押した時の挙動
 fontBtn.onclick = e => {
-	//ボタンを親要素に影響させない
 	e.stopPropagation();
-	// スライダーのやつ、fontPopup表示されていれば閉じる、閉じていれば表示する
-	fontPopup.style.display = ( fontPopup.style.display === 'block' ) ? 'none' : 'block';
-	// 押されたらユーザーメニューを非表示にする
-	userMenu.style.display = 'none';
+	const isOpen = fontPopup.style.display === 'block';
+	closeAllMenus();
+	if ( !isOpen ) fontPopup.style.display = 'block';
 };
-
 // スライダーが確定されたら文字サイズ変更
 fontSlider.oninput = e => {
 	const size = fontSlider.value + 'px';
@@ -181,16 +177,16 @@ if ( savedSize ) {
 // 初期状態を localStorage から取得
 
 // localStorage の値を取得
-let darkOn = localStorage.getItem('dreadnote-dark');
+let darkOn = localStorage.getItem( 'dreadnote-dark' );
 if ( darkOn ) document.body.classList.add( 'dark' );
 
 
-if (darkOn === null) {
-  // localStorage に値がなければ端末の設定を確認
-  darkOn = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+if ( darkOn === null ) {
+	// localStorage に値がなければ端末の設定を確認
+	darkOn = window.matchMedia && window.matchMedia( '(prefers-color-scheme: dark)' ).matches;
 } else {
-  // localStorage に値がある場合は '1' が true, それ以外は false
-  darkOn = darkOn === '1';
+	// localStorage に値がある場合は '1' が true, それ以外は false
+	darkOn = darkOn === '1';
 }
 
 // console.log('Dark mode:', darkOn);
@@ -276,7 +272,7 @@ onAuthStateChanged( auth, async user => {
 
 	await navigate(); // ← 必ず呼ぶ
 	sidebarToggle.style.display = 'block';
-// console.log(UserKey(auth.currentUser))
+	// console.log(UserKey(auth.currentUser))
 
 } );
 window.addEventListener( 'hashchange', ( e ) => {
@@ -284,18 +280,18 @@ window.addEventListener( 'hashchange', ( e ) => {
 		navigate();
 	}
 } );
-function getEmailPrefix(email) {
-  if (!email) return 'user';
-  // @より前を取得
-  let prefix = email.split('@')[0];
-  // 英数字以外は削除（ピリオド・記号を取り除く）
-  prefix = prefix.replace(/[^a-zA-Z0-9]/g, '');
-  return prefix;
+function getEmailPrefix( email ) {
+	if ( !email ) return 'user';
+	// @より前を取得
+	let prefix = email.split( '@' )[0];
+	// 英数字以外は削除（ピリオド・記号を取り除く）
+	prefix = prefix.replace( /[^a-zA-Z0-9]/g, '' );
+	return prefix;
 }
-function UserKey(user) {
-  const prefix = getEmailPrefix(user.email || '');
-  const uid = user.uid; // UID は末尾に追加
-  return `${prefix}-${uid}`;
+function UserKey( user ) {
+	const prefix = getEmailPrefix( user.email || '' );
+	const uid = user.uid; // UID は末尾に追加
+	return `${prefix}-${uid}`;
 }
 //5️⃣ メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 function renderTotalSize() {
@@ -320,7 +316,7 @@ async function loadMetaOnce() {
 
 	let metaWasFixed = false;
 
-	const metaRef = doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' );
+	const metaRef = doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'meta', 'main' );
 	const snap = await getDoc( metaRef );
 
 	if ( snap.exists() ) {
@@ -337,7 +333,7 @@ async function loadMetaOnce() {
 	// 🔁 meta が空なら Firestore から1回だけ復元
 	if ( metaCache.notes.length === 0 ) {
 		const notesSnap = await getDocs(
-			collection( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes' )
+			collection( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes' )
 		);
 
 		metaCache.notes = notesSnap.docs.map( d => {
@@ -379,15 +375,15 @@ async function loadMetaOnce() {
 			m.pinnedDate = null;
 			metaWasFixed = true;
 		}
-		if (!m.created) {
-        m.created = m.updated;
-        metaWasFixed = true;
-    }
+		if ( !m.created ) {
+			m.created = m.updated;
+			metaWasFixed = true;
+		}
 		// ⭐ favorite（お気に入り） ← 追加
-  if (typeof m.favorite !== 'boolean') {
-    m.favorite = false;
-    metaWasFixed = true;
-  }
+		if ( typeof m.favorite !== 'boolean' ) {
+			m.favorite = false;
+			metaWasFixed = true;
+		}
 	} );
 
 	// ✅ 「直した時だけ」保存
@@ -405,62 +401,62 @@ async function loadMetaOnce() {
 	return metaCache;
 }
 function closeAllMenus() {//欄外タップで🗑️とかのメニュー閉じる
-	document.querySelectorAll( '.menu-popup' ).forEach( m => {
+	document.querySelectorAll( '.menu-panel' ).forEach( m => {
 		m.style.display = 'none';
 	} );
 }
-sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙動
-  btn.addEventListener('click', () => {
-    currentSort = btn.dataset.value; // 選択値を currentSort に保存
-    sortMenu.style.display = 'none';
+sortMenu.querySelectorAll( 'button' ).forEach( btn => {// ソートした時の挙動
+	btn.addEventListener( 'click', () => {
+		currentSort = btn.dataset.value; // 選択値を currentSort に保存
+		sortMenu.style.display = 'none';
 
 		// ✅ チェックマーク更新
-    sortMenu.querySelectorAll('button').forEach(b => b.classList.remove('checked'));
-    btn.classList.add('checked');
+		sortMenu.querySelectorAll( 'button' ).forEach( b => b.classList.remove( 'checked' ) );
+		btn.classList.add( 'checked' );
 
-    // ボタン表示に反映
-    // sortBtn.textContent = btn.textContent;
+		// ボタン表示に反映
+		// sortBtn.textContent = btn.textContent;
 
-    // 再描画
-    loadNotes(currentSort);
-  });
-});
+		// 再描画
+		loadNotes( currentSort );
+	} );
+} );
 function updateSortMenuCheck() {// ページロードやメニューを開いた時に呼ぶ
-  sortMenu.querySelectorAll('button').forEach(b => {
-    b.classList.toggle('checked', b.dataset.value === currentSort);
-  });
+	sortMenu.querySelectorAll( 'button' ).forEach( b => {
+		b.classList.toggle( 'checked', b.dataset.value === currentSort );
+	} );
 }
 updateSortMenuCheck();// 最初に呼ぶ
-async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイドバーに表示する
+async function loadNotes( sortBy = 'pinned+updated' ) {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
 	metaCache.notes
 		.filter( m => !m.deleted )
-		.sort((a, b) => {
-			 // ① favorite を最優先
-  if (a.favorite !== b.favorite) {
-    return a.favorite ? -1 : 1;
-  }
-      switch(sortBy) {
-        case 'pinned+updated': {
-          const aTime = a.pinnedDate || a.updated;
-          const bTime = b.pinnedDate || b.updated;
-          return bTime - aTime;
-        }
-        case 'pinned+created': {
-          const aTime = a.pinnedDate || a.created;
-          const bTime = b.pinnedDate || b.created;
-          return bTime - aTime;
-        }
-        case 'created': return b.created - a.created;
-        case 'updated': return b.updated - a.updated;
-        default: {
-          const aTime = a.pinnedDate || a.updated;
-          const bTime = b.pinnedDate || b.updated;
-          return bTime - aTime;
-        }
-      }
-    })
+		.sort( ( a, b ) => {
+			// ① favorite を最優先
+			if ( a.favorite !== b.favorite ) {
+				return a.favorite ? -1 : 1;
+			}
+			switch ( sortBy ) {
+				case 'pinned+updated': {
+					const aTime = a.pinnedDate || a.updated;
+					const bTime = b.pinnedDate || b.updated;
+					return bTime - aTime;
+				}
+				case 'pinned+created': {
+					const aTime = a.pinnedDate || a.created;
+					const bTime = b.pinnedDate || b.created;
+					return bTime - aTime;
+				}
+				case 'created': return b.created - a.created;
+				case 'updated': return b.updated - a.updated;
+				default: {
+					const aTime = a.pinnedDate || a.updated;
+					const bTime = b.pinnedDate || b.updated;
+					return bTime - aTime;
+				}
+			}
+		} )
 		.forEach( m => {
 
 			const li = document.createElement( 'li' );
@@ -513,13 +509,13 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 
 			const dateSpan = document.createElement( 'span' );
 			dateSpan.className = 'date-span';
-			const displayDate = getNoteDisplayTime(m, sortBy);
+			const displayDate = getNoteDisplayTime( m, sortBy );
 			dateSpan.textContent = new Date( displayDate ).toLocaleString( 'ja-JP', {
 				year: 'numeric', month: '2-digit', day: '2-digit',
 				hour: '2-digit', minute: '2-digit'
 			} );
 			// 🔹 pinned ならマークを追加
-			 if ((sortBy === 'pinned+updated' || sortBy === 'pinned+created') && m.pinned) {
+			if ( ( sortBy === 'pinned+updated' || sortBy === 'pinned+created' ) && m.pinned ) {
 				const pin = document.createElement( 'span' );
 				pin.textContent = '』';
 				pin.style.marginLeft = '4px';
@@ -532,31 +528,31 @@ async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイド�
 			menuBtn.className = 'menu-btn';
 
 			const menuPopup = document.createElement( 'div' );
-			menuPopup.className = 'menu-popup menu-panel';
-			menuPopup.style.top='2em'
-			menuPopup.style.right='-12px'
+			menuPopup.className = 'menu-panel';
+			menuPopup.style.top = '2em'
+			menuPopup.style.right = '-12px'
 			// 例えば右側の div を親にする場合
 			rightDiv.style.position = 'relative'; // 親に relative を付与
 
 			// ⭐ favorite ボタン（追加）
-const favBtn = document.createElement('button');
-favBtn.textContent = m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り';
-favBtn.onclick = async (e) => {
-  e.stopPropagation();
+			const favBtn = document.createElement( 'button' );
+			favBtn.textContent = m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り';
+			favBtn.onclick = async ( e ) => {
+				e.stopPropagation();
 
-  m.favorite = !m.favorite;
+				m.favorite = !m.favorite;
 
-  await saveMeta();          // 永続化
-  menuPopup.style.display = 'none';
+				await saveMeta();          // 永続化
+				menuPopup.style.display = 'none';
 
-  loadNotes(currentSort);    // 並び即反映
-};
-if (m.favorite) {
-  const star = document.createElement('span');
-  star.textContent = '★';
-  star.style.marginRight = '4px';
-  titleSpan.prepend(star);
-}
+				loadNotes( currentSort );    // 並び即反映
+			};
+			if ( m.favorite ) {
+				const star = document.createElement( 'span' );
+				star.textContent = '★';
+				star.style.marginRight = '4px';
+				titleSpan.prepend( star );
+			}
 			// 📌 ピンボタン
 			const pinBtn = document.createElement( 'button' );
 			pinBtn.textContent = m.pinned ? '』 時刻変更' : '』 時刻固定';
@@ -606,17 +602,17 @@ if (m.favorite) {
 				m.updated = Date.now();
 				await saveMeta();
 				loadNotes();
-				if (location.hash === '#/trash') {
-        loadTrash();
-    } 
+				if ( location.hash === '#/trash' ) {
+					loadTrash();
+				}
 				showToast( `${m.title || 'New Note'} was Moved to Trash` );
 				menuPopup.style.display = 'none';
-				if (currentNoteId===m.id){
-					location.hash='#/home';
+				if ( currentNoteId === m.id ) {
+					location.hash = '#/home';
 				}
 			};
 
-			menuPopup.append( favBtn,pinBtn, copyBtn, delBtn );
+			menuPopup.append( favBtn, pinBtn, copyBtn, delBtn );
 			menuBtn.onclick = e => {
 				e.stopPropagation();
 
@@ -638,14 +634,14 @@ if (m.favorite) {
 	renderTotalSize();
 	renderNoteCount();
 }
-function getNoteDisplayTime(note, sortBy) {// 🔹 表示時刻取得関数（sortSelect に連動）
-    switch(sortBy) {
-        case 'pinned+updated': return note.pinnedDate || note.updated;
-        case 'pinned+created': return note.pinnedDate || note.created;
-        case 'created': return note.created;
-        case 'updated': return note.updated;
-        default: return note.updated;
-    }
+function getNoteDisplayTime( note, sortBy ) {// 🔹 表示時刻取得関数（sortSelect に連動）
+	switch ( sortBy ) {
+		case 'pinned+updated': return note.pinnedDate || note.updated;
+		case 'pinned+created': return note.pinnedDate || note.created;
+		case 'created': return note.created;
+		case 'updated': return note.updated;
+		default: return note.updated;
+	}
 }
 function openPinModal( m ) {//時刻固定のモーダル
 	// container を作る
@@ -741,13 +737,13 @@ function openPinModal( m ) {//時刻固定のモーダル
 	btns.addEventListener( 'click', stop );
 	btns.addEventListener( 'touchstart', stop );
 	// overlayクリックでモーダル閉じる
-	['click', 'touchstart', 'mousedown'].forEach(ev => {
-    overlay.addEventListener(ev, e => {
-        e.stopPropagation();
-        e.preventDefault();
-        container.remove();
-    });
-});
+	['click', 'touchstart', 'mousedown'].forEach( ev => {
+		overlay.addEventListener( ev, e => {
+			e.stopPropagation();
+			e.preventDefault();
+			container.remove();
+		} );
+	} );
 
 }
 function loadTrash() {/* Trash表示 */
@@ -821,7 +817,7 @@ function loadTrash() {/* Trash表示 */
 			menuBtn.className = 'menu-btn';
 
 			const menuPopup = document.createElement( 'div' );
-			menuPopup.className = 'menu-panel menu-popup';
+			menuPopup.className = 'menu-panel';
 
 			// 完全削除ボタン
 			const delBtn = document.createElement( 'button' );
@@ -830,7 +826,7 @@ function loadTrash() {/* Trash表示 */
 			delBtn.onclick = async e => {
 				e.stopPropagation();
 				// Firestoreのドキュメントを削除
-				await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
+				await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 				// meta からも削除
 				metaCache.notes = metaCache.notes.filter( mm => mm.id !== m.id );
 				await saveMeta();
@@ -841,8 +837,14 @@ function loadTrash() {/* Trash表示 */
 			menuPopup.appendChild( delBtn );
 			menuBtn.onclick = e => {
 				e.stopPropagation();
-				menuPopup.style.display =
-					menuPopup.style.display === 'block' ? 'none' : 'block';
+
+				const isOpen = menuPopup.style.display === 'block';
+
+				closeAllMenus();
+
+				if ( !isOpen ) {
+					menuPopup.style.display = 'block';
+				}
 			};
 
 			// 右側 div に追加（順序：日付 → 復元 → メニュー）
@@ -860,7 +862,7 @@ async function openEditor( id ) {//メモidからエディターを開く関数
 		showEditor( noteCache[id] );
 		return;
 	}
-	const snap = await getDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', id ) );
+	const snap = await getDoc( doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes', id ) );
 	const data = snap.data();
 	noteCache[id] = data;
 	localUpdated = data.updated || 0;
@@ -921,7 +923,7 @@ async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta
 			break;
 		}
 	}
-	const noteRef = doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', currentNoteId );
+	const noteRef = doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes', currentNoteId );
 	const snap = await getDoc( noteRef );
 	const serverData = snap.exists() ? snap.data() : null;
 
@@ -1057,7 +1059,7 @@ async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta
 }
 async function saveMeta() {
 	await setDoc(
-		doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
+		doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
 		metaCache
 	);
 }
@@ -1076,7 +1078,7 @@ async function fixSizesOnce() {
 	if ( notesToCheck.length === 0 ) return;
 
 	// Firestore getDocs でまとめて取得
-	const noteRefs = notesToCheck.map( m => doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
+	const noteRefs = notesToCheck.map( m => doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 	const snaps = await Promise.all( noteRefs.map( ref => getDoc( ref ) ) );
 
 	snaps.forEach( ( snap, i ) => {
@@ -1625,7 +1627,7 @@ function enableEdit() {
 	} );
 }
 editor.addEventListener( 'mousedown', e => {// PC: クリックで編集開始:
-// mousedown自体はモバイルでも起こるが、先にtouchstartが発火するのでそれによるisTouchDevice = true;で防ぐ
+	// mousedown自体はモバイルでも起こるが、先にtouchstartが発火するのでそれによるisTouchDevice = true;で防ぐ
 	if ( isTouchDevice ) return;
 	// 長押しやリンククリックは除外
 	if ( e.target.closest( 'a' ) || e.target.closest( 'img' ) || e.target.closest( 'iframe' ) ) return;
@@ -1658,7 +1660,7 @@ editor.addEventListener( 'click', e => {//PCモバイル共通
 
 } );
 editor.addEventListener( 'blur', () => {
-//settimeoutはモバイル用の安全策、カーソルがなくなった時の挙動
+	//settimeoutはモバイル用の安全策、カーソルがなくなった時の挙動
 
 	setTimeout( () => {
 		editor.contentEditable = 'false';
@@ -1726,7 +1728,7 @@ newNote.onclick = async () => {
 	const now = Date.now();
 	// 本文ドキュメントを1件だけ作る
 	const ref = await addDoc(
-		collection( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes' ),
+		collection( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes' ),
 		{ title: '', content: '', updated: now }
 	);
 
@@ -1741,7 +1743,7 @@ newNote.onclick = async () => {
 
 	// meta保存
 	await setDoc(
-		doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
+		doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
 		metaCache
 	);
 
@@ -1749,7 +1751,7 @@ newNote.onclick = async () => {
 	location.hash = `#/editor/${ref.id}`;
 	closeSidebar();
 };
-newNote2.onclick =newNote.onclick;
+newNote2.onclick = newNote.onclick;
 async function navigate() {/* Navigation */
 	if ( !auth.currentUser ) {
 		show( 'login' );
@@ -1780,7 +1782,7 @@ async function navigate() {/* Navigation */
 				const trashNotes = metaCache.notes.filter( m => m.deleted );
 				for ( const m of trashNotes ) {
 					// 完全削除
-					await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
+					await deleteDoc( doc( db, 'users', `${auth.currentUser.email.split( '@' )[0]}-${auth.currentUser.uid}`, 'notes', m.id ) );
 				}
 
 
@@ -1794,7 +1796,7 @@ async function navigate() {/* Navigation */
 		}
 
 	} else {
-		await loadMetaOnce();  
+		await loadMetaOnce();
 		show( 'home' );
 		await loadNotes();
 	}
