@@ -146,6 +146,7 @@ fontBtn.onclick = e => {
 	const isOpen = fontPopup.style.display === 'block';
 	closeAllMenus();
 	if ( !isOpen ) fontPopup.style.display = 'block';
+	closeSidebar();
 };
 // スライダーが確定されたら文字サイズ変更
 fontSlider.oninput = e => {
@@ -633,6 +634,16 @@ async function loadNotes( sortBy = 'pinned+updated' ) {//メモ一覧をサイ�
 		} );
 	renderTotalSize();
 	renderNoteCount();
+
+// 🔽 これを追加
+requestAnimationFrame(() => {
+  const activeItem = noteList.querySelector('li.active');
+  if (activeItem) {
+    activeItem.scrollIntoView({
+      block: 'start',   // 'nearest' でもOK
+      behavior: 'auto'   // 'smooth' にしてもいい
+    });
+  }})
 }
 function getNoteDisplayTime( note, sortBy ) {// 🔹 表示時刻取得関数（sortSelect に連動）
 	switch ( sortBy ) {
@@ -1738,7 +1749,11 @@ newNote.onclick = async () => {
 		title: '',
 		created: now,
 		updated: now,
-		deleted: false
+		deleted: false,
+		pinned: false,
+		pinnedDate: null,
+		favorite: false,
+		size: 0
 	} );
 
 	// meta保存

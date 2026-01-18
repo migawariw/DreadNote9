@@ -24,9 +24,7 @@
 </head>
 
 <body class="auth-loading">
-
 	<button id="sidebar-toggle">＝</button>
-
 	<div id="sidebar" class="hidden">
 		<div class="flex-between">
 			<h2 style="font-size: 32px;"><button id="sidebar-toggle2">＝</button></h2>
@@ -52,16 +50,15 @@
 				</div>
 			</div>
 		</div>
-		<div id="font-size-popup" class="menu-panel">
-			<input type="range" id="font-size-slider" min="12" max="28" value="16">
-			<span id="font-size-value"></span>
-		</div>
 		<ul id="note-list"></ul>
 		<div id="note-count" class="note-count"></div>
 		<div id="total-size"></div>
 		<div style="height:200px;"></div> <!-- 下に余白 -->
 	</div>
-
+	<div id="font-size-popup" class="menu-panel">
+		<input type="range" id="font-size-slider" min="12" max="28" value="16">
+		<span id="font-size-value"></span>
+	</div>
 	<section id="view-login" hidden>
 		<h1>DreadNote</h1>
 		<button id="google-login">
@@ -94,7 +91,7 @@
 		<div class="flex-between">
 			<h2>Trash</h2>
 			<div style="display:flex;gap:8px;align-items:center;">
-				<button id="empty-trash-btn">Empty Trash</button>
+				<button id="empty-trash-btn" style="color: red;">Empty Trash</button>
 			</div>
 		</div>
 		<ul id="trash-list"></ul>
