@@ -446,7 +446,8 @@ right: 0;
 }
 }
 
-#user-menu {
+#user-menu
+,#user-menu2 {
 position: absolute;
 /* position: fixed; */
 top: 70px;
@@ -461,15 +462,15 @@ white-space: nowrap;
 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 overflow: hidden;
 }
-
 /* モバイルなど画面幅 < 800px の場合は右端16px固定 */
 @media (max-width: 799px) {
-#user-menu {
+#user-menu ,#user-menu2 {
 right: 0px;
 }
 }
 
-#user-menu button {
+#user-menu button,
+#user-menu2 button  {
 display: block;
 width: 100%;
 padding: 10px 16px;
@@ -480,21 +481,23 @@ text-align: left;
 font-size: 15px;
 }
 
-#user-menu button:hover {
+#user-menu button:hover,
+#user-menu2 button:hover {
 background: #f2f2f7;
 z-index: 3;
 }
 
-body.dark #user-menu {
+body.dark #user-menu,body.dark #user-menu2 {
 background: #1c1c1e;
 border-color: #333;
 }
 
-body.dark #user-menu button {
+body.dark #user-menu button,
+body.dark #user-menu2 button{
 color: #007fff;
 }
 
-body.dark #user-menu button:hover {
+body.dark #user-menu button:hover,body.dark #user-menu2 button:hover {
 background: #24242e;
 }
 

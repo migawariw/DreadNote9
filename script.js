@@ -1,7 +1,9 @@
+// #region
 // 0️⃣ モジュールのインポート
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDocs, getFirestore, collection, addDoc, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { htmlToMarkdown } from './htmlToMarkdown.js';
 
 //1️⃣ Firebase 初期化・キャッシュ
 // RAMに一時的に保存（リロードで消える）
@@ -17,16 +19,10 @@ const firebaseConfig = {
   messagingSenderId: "52518748481",
   appId: "1:52518748481:web:41bffae85624045e1261c0"
 };
-// ✅ 呼び出しの可能性あり（内部で軽くプロジェクト確認など）
 const app = initializeApp( firebaseConfig );
-// ❌ ローカルオブジェクト作成のみ → 通信なし
 const auth = getAuth( app );
-// ❌ ローカルオブジェクト作成のみ → 通信なし
 const db = getFirestore( app );
-// ✅ 確実に呼び出し発生（サーバーに問い合わせて認証確認）
 getRedirectResult( auth ).catch( () => { } );
-
-
 /* 2️⃣DOM要素格納 このブロックはFirebaseへの通信無し*/
 // すなわちHTML内の各要素（ログイン画面、一覧画面、ゴミ箱画面、エディター画面）を変数に格納する
 const views = {
@@ -36,6 +32,7 @@ const views = {
 	editor: document.getElementById( 'view-editor' )
 };
 //メモ一覧、ゴミ箱、エディター、ユーザーアイコン、メニュー等を表示する要素を取得している
+const logInBtn=document.getElementById( 'google-login' );
 const noteList = document.getElementById( 'note-list' );
 const trashList = document.getElementById( 'trash-list' );
 const editor = document.getElementById( 'editor' );
@@ -43,13 +40,22 @@ const editor = document.getElementById( 'editor' );
 const userIcon = document.getElementById( 'user-icon' );
 const userIcon2 = document.getElementById( 'user-icon2' );
 const userMenu = document.getElementById( 'user-menu' );
+const userMenu2 = document.getElementById( 'user-menu2' );
 const fontBtn = document.getElementById( 'font-size-btn' );
 const fontPopup = document.getElementById( 'font-size-popup' );
 const fontSlider = document.getElementById( 'font-size-slider' );
 const fontValue = document.getElementById( 'font-size-value' );
-const toast = document.getElementById( 'toast' );
-const darkBtn = document.getElementById( 'dark-btn' );
 const spreadBtn = document.getElementById( 'spread-btn' );
+const darkBtn = document.getElementById( 'dark-btn' );
+const goHomeBtn =document.getElementById( 'go-home' );
+const goTrashBtn =document.getElementById( 'go-trash' );
+const logOutBtn=document.getElementById( 'logout-btn' );
+
+const toast = document.getElementById( 'toast' );
+
+const newNote=document.getElementById( 'new-note' );
+const newNote2=document.getElementById( 'new-note-2' );
+
 
 const sidebar = document.getElementById( 'sidebar' );
 const sidebarToggle = document.getElementById( 'sidebar-toggle' );
@@ -58,6 +64,9 @@ const sidebarToggle2 = document.getElementById( 'sidebar-toggle2' );
 const saveIndicator = document.getElementById( 'saveIndicator' );
 const saveStatus = saveIndicator.querySelector( '.saveStatus' );
 const timestampEl = saveIndicator.querySelector( '.timestamp' );
+
+const emptyTrashBtn = document.getElementById( 'empty-trash-btn' );
+
 
 editor.contentEditable = 'true';
 
@@ -71,7 +80,6 @@ let currentNoteId = null;
 let noteLoaded = null;
 let localUpdated = 0;
 let hideStatusTimer = null;
-
 
 // 3️⃣UI操作（フォント、ダークモード、トーストなど）
 function formatDateTime( date ) {
@@ -99,6 +107,8 @@ function closeSidebar() {
 	sidebar.classList.remove( 'show' );
 }
 sidebarToggle2.onclick = closeSidebar;
+goTrashBtn.onclick = () => { location.hash = '#/trash'; closeSidebar(); }
+goHomeBtn.onclick = () => { location.hash = '#/home'; closeSidebar(); }
 
 document.addEventListener( 'click', ( e ) => {
 	if ( sidebar.classList.contains( 'show' ) && !sidebar.contains( e.target ) && e.target !== sidebarToggle ) {
@@ -111,6 +121,7 @@ document.addEventListener( 'click', ( e ) => {
 	// 他の場所をクリックしたらメニューが閉じる
 
 	if ( !userMenu.contains( e.target ) && e.target !== userIcon ) userMenu.style.display = 'none';
+	if ( !userMenu2.contains( e.target ) && e.target !== userIcon2 ) userMenu2.style.display = 'none';
 	document.querySelectorAll( '.menu-popup' ).forEach( menu => {
 		const btn = menu.previousSibling;
 		if ( !menu.contains( e.target ) && !btn.contains( e.target ) ) menu.style.display = 'none';
@@ -118,7 +129,7 @@ document.addEventListener( 'click', ( e ) => {
 } );
 
 userIcon.onclick = () => { userMenu.style.display = ( userMenu.style.display === 'block' ) ? 'none' : 'block'; }
-userIcon2.onclick = () => { userMenu.style.display = ( userMenu.style.display === 'block' ) ? 'none' : 'block'; }
+userIcon2.onclick = () => { userMenu2.style.display = ( userMenu2.style.display === 'block' ) ? 'none' : 'block'; }
 // Aa押した時の挙動
 fontBtn.onclick = e => {
 	//ボタンを親要素に影響させない
@@ -226,11 +237,10 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters( {
 	prompt: 'select_account'
 } )
+logInBtn.onclick = async () => { try { await signInWithPopup( auth, provider ); } catch ( e ) { showToast( "Googleログイン失敗: " + e.message ); } };
 
-document.getElementById( 'google-login' ).onclick = async () => { try { await signInWithPopup( auth, provider ); } catch ( e ) { showToast( "Googleログイン失敗: " + e.message ); } };
-
-document.getElementById( 'logout-btn' ).onclick = () => { closeSidebar(); userMenu.style.display = 'none'; sidebarToggle.style.display = 'none', metaCache = null; signOut( auth ); location.hash = '#login'; }
-
+logOutBtn.onclick = () => { closeSidebar(); userMenu.style.display = 'none'; sidebarToggle.style.display = 'none', metaCache = null; signOut( auth ); location.hash = '#login'; }
+// #endregion
 onAuthStateChanged( auth, async user => {
 	// ★ ここで「画面を表示していい」と宣言
 	document.body.classList.remove( 'auth-loading' );
@@ -261,7 +271,6 @@ console.log(UserKey(auth.currentUser))
 window.addEventListener( 'hashchange', ( e ) => {
 	if ( auth.currentUser ) {
 		navigate();
-
 	}
 } );
 function getEmailPrefix(email) {
@@ -272,7 +281,6 @@ function getEmailPrefix(email) {
   prefix = prefix.replace(/[^a-zA-Z0-9]/g, '');
   return prefix;
 }
-
 function UserKey(user) {
   const prefix = getEmailPrefix(user.email || '');
   const uid = user.uid; // UID は末尾に追加
@@ -377,17 +385,14 @@ async function loadMetaOnce() {
 
 	return metaCache;
 }
-
-function closeAllMenus() {
+function closeAllMenus() {//欄外タップで🗑️とかのメニュー閉じる
 	document.querySelectorAll( '.menu-popup' ).forEach( m => {
 		m.style.display = 'none';
 	} );
 }
-import { htmlToMarkdown } from './htmlToMarkdown.js';
-async function loadNotes() {
+async function loadNotes() {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
-
 	metaCache.notes
 		.filter( m => !m.deleted )
 		.sort( ( a, b ) => b.updated - a.updated )
@@ -517,6 +522,9 @@ async function loadNotes() {
 				loadNotes();
 				showToast( `${m.title || 'New Note'} was Moved to Trash` );
 				menuPopup.style.display = 'none';
+				if (currentNoteId===m.id){
+					location.hash='#/home';
+				}
 			};
 
 			menuPopup.append( pinBtn, copyBtn, delBtn );
@@ -541,8 +549,7 @@ async function loadNotes() {
 	renderTotalSize();
 	renderNoteCount();
 }
-
-function openPinModal( m ) {
+function openPinModal( m ) {//時刻固定のモーダル
 	// container を作る
 	const container = document.createElement( 'div' );
 	container.className = 'pin-modal-container';
@@ -645,9 +652,7 @@ function openPinModal( m ) {
 });
 
 }
-
-/* Trash表示 */
-function loadTrash() {
+function loadTrash() {/* Trash表示 */
 	if ( !metaCache || !Array.isArray( metaCache.notes ) ) return;
 	trashList.innerHTML = '';
 
@@ -748,8 +753,7 @@ function loadTrash() {
 			trashList.appendChild( li );
 		} );
 }
-//メモidからエディターを開く関数
-async function openEditor( id ) {
+async function openEditor( id ) {//メモidからエディターを開く関数
 	noteLoaded = false;
 	editor.contentEditable = false;
 	currentNoteId = id;
@@ -763,8 +767,7 @@ async function openEditor( id ) {
 	localUpdated = data.updated || 0;
 	showEditor( data );
 }
-// dataからhtmlを表示する関数
-async function showEditor( data ) {
+async function showEditor( data ) {// dataからhtmlを表示する関数
 	editor.contentEditable = false; // まずロード中は false
 	// 既存タイトルを本文の1行目に追加
 	const content = data.content || '';
@@ -795,18 +798,14 @@ async function showEditor( data ) {
 		// editor.contentEditable = true;
 	} );
 }
-// --- タイムスタンプ更新関数 ---
-function updateTimestamp( noteId ) {
+function updateTimestamp( noteId ) {// --- タイムスタンプ更新関数 ---
 	const meta = getMeta( noteId );
 	if ( !meta ) return;
 	const time = new Date( meta.updated );
 	timestampEl.textContent = formatDateTime( time );
 	timestampEl.classList.add( 'visible' );
 }
-
-//5️⃣-2 メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
-
-async function saveNote() {
+async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 	if ( !currentNoteId ) return;
 
 	const content = editor.innerHTML;
@@ -956,18 +955,15 @@ async function saveNote() {
 	renderTotalSize();
 	return true;
 }
-
 async function saveMeta() {
 	await setDoc(
 		doc( db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'meta', 'main' ),
 		metaCache
 	);
 }
-
 function getMeta( id ) {
 	return metaCache.notes.find( m => m.id === id );
 }
-
 async function updateMeta( id, fields ) {
 	const m = getMeta( id );
 	if ( !m ) return;
@@ -999,7 +995,6 @@ async function fixSizesOnce() {
 		renderTotalSize();
 	}
 }
-
 function formatSize( bytes = 0 ) {
 	const kb = Math.max( 0, Math.floor( bytes / 1024 ) );
 
@@ -1017,10 +1012,7 @@ function formatSize( bytes = 0 ) {
 function isLargeSize( bytes = 0 ) {
 	return bytes >= 700 * 1024;
 }
-
-
 //6️⃣ エディターイベント（入力、貼り付け、キーボード操作）
-
 editor.addEventListener( 'input', () => {
 	if ( !currentNoteId ) return;
 	const meta = getMeta( currentNoteId ); // ← ここで取得
@@ -1056,9 +1048,7 @@ editor.addEventListener( 'input', () => {
 		timestampEl.textContent = formatDateTime( new Date( meta.updated ) );
 	}, 1000 );
 } );
-
-// ===== Italic → h2 変換、アンダーライン→取消線 =====
-editor.addEventListener( 'beforeinput', e => {
+editor.addEventListener( 'beforeinput', e => {//Italic→h2,UL→取消
 	if ( e.inputType === 'formatItalic' ) {
 		e.preventDefault();
 
@@ -1089,7 +1079,6 @@ editor.addEventListener( 'beforeinput', e => {
 		editor.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 	}
 } );
-
 editor.addEventListener( 'keydown', e => {
 	const sel = document.getSelection();
 	if ( !sel.rangeCount ) return;
@@ -1125,21 +1114,15 @@ editor.addEventListener( 'keydown', e => {
 		document.execCommand( 'italic' ); // 選択中をイタリックに
 	}
 } );
-
-/* Paste処理（画像・埋め込み・テキスト対応 完全版） */
-
-const pasteConfig = {
+const pasteConfig = {/* ここからPaste*/
 	enableUrlLink: true,
 	enableEmbed: true
 };
-
-/* ===== Range utilities ====== */
 function getCurrentRange() {
 	const sel = document.getSelection();
 	if ( !sel || !sel.rangeCount ) return null;
 	return sel.getRangeAt( 0 );
 }
-
 function replaceRangeWithNodes( editor, range, nodes ) {
 	range.deleteContents();
 	for ( const node of nodes ) {
@@ -1149,12 +1132,9 @@ function replaceRangeWithNodes( editor, range, nodes ) {
 	range.collapse( true );
 	editor.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 }
-
-/* ===== URL utilities ====== */
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 const IMAGE_URL_REGEX = /\.(png|jpe?g|gif|webp)(\?.*)?$/i;
-
-function splitTextByUrl( text ) {
+function splitTextByUrl( text ) {//urlを通常テキストと分離して配列に
 	const parts = [];
 	let last = 0;
 	for ( const m of text.matchAll( URL_REGEX ) ) {
@@ -1169,13 +1149,10 @@ function splitTextByUrl( text ) {
 	}
 	return parts;
 }
-
 function isSingleUrlLine( line ) {
 	return /^https?:\/\/[^\s]+$/.test( line.trim() );
 }
-
-/* ===== Embed handlers ====== */
-const embedHandlers = [
+const embedHandlers = [//SNSリンクを判定して対応する埋め込みhtml作る
 	// YouTube
 	{
 		match: url =>
@@ -1266,8 +1243,6 @@ const embedHandlers = [
 		}
 	}
 ];
-
-/* ===== Image paste (single image) ====== */
 async function handleSingleImagePaste( file, editor, range ) {
 	const originalSizeBytes = file.size;
 
@@ -1351,9 +1326,7 @@ async function handleSingleImagePaste( file, editor, range ) {
 	};
 	reader.readAsDataURL( safeBlob );
 }
-
-/* ===== paste handler ====== */
-editor.addEventListener( 'paste', async e => {
+editor.addEventListener( 'paste', async e => {//Pasteイベント
 	const items = e.clipboardData?.items || [];
 	const text = e.clipboardData?.getData( 'text/plain' ) || '';
 	const range = getCurrentRange();
@@ -1449,7 +1422,6 @@ editor.addEventListener( 'paste', async e => {
 		replaceRangeWithNodes( editor, range, nodes );
 	}
 } );
-
 editor.addEventListener( 'copy', e => {
 	const sel = document.getSelection();
 	if ( !sel || sel.isCollapsed ) return;
@@ -1512,7 +1484,6 @@ editor.addEventListener( 'touchstart', e => {
 		longPress = true;
 	}
 } );
-
 editor.addEventListener( 'touchend', () => {
 	// 🔒 リンクプレビュー後は何もしない
 	if ( longPress ) return;
@@ -1530,7 +1501,6 @@ editor.addEventListener( 'touchend', () => {
 
 	enableEdit();
 } );
-
 function enableEdit() {
 	if ( noteLoaded !== true ) return; // ← ロード前は編集不可
 	// まず editable にする
@@ -1554,9 +1524,8 @@ function enableEdit() {
 		editor.focus( { preventScroll: true } );
 	} );
 }
-
-// PC: クリックで編集開始: mousedown自体はモバイルでも起こるが、先にtouchstartが発火するのでそれによるisTouchDevice = true;で防ぐ
-editor.addEventListener( 'mousedown', e => {
+editor.addEventListener( 'mousedown', e => {// PC: クリックで編集開始:
+// mousedown自体はモバイルでも起こるが、先にtouchstartが発火するのでそれによるisTouchDevice = true;で防ぐ
 	if ( isTouchDevice ) return;
 	// 長押しやリンククリックは除外
 	if ( e.target.closest( 'a' ) || e.target.closest( 'img' ) || e.target.closest( 'iframe' ) ) return;
@@ -1577,8 +1546,7 @@ editor.addEventListener( 'mousedown', e => {
 	editor.contentEditable = 'true';
 	editor.focus();
 } );
-//PCモバイル共通
-editor.addEventListener( 'click', e => {
+editor.addEventListener( 'click', e => {//PCモバイル共通
 	const a = e.target.closest( 'a' );
 	if ( !a ) return;
 
@@ -1589,8 +1557,9 @@ editor.addEventListener( 'click', e => {
 	}
 
 } );
-//settimeoutはモバイル用の安全策、カーソルがなくなった時の挙動
 editor.addEventListener( 'blur', () => {
+//settimeoutはモバイル用の安全策、カーソルがなくなった時の挙動
+
 	setTimeout( () => {
 		editor.contentEditable = 'false';
 	}, 0 );
@@ -1648,13 +1617,8 @@ editor.addEventListener( 'keydown', ( e ) => {
 
 	editor.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 } );
-
 /* 7️⃣ ナビゲーション・新規作成ボタン*/
-document.getElementById( 'go-trash' ).onclick = () => { location.hash = '#/trash'; closeSidebar(); }
-document.getElementById( 'go-home' ).onclick = () => { location.hash = '#/home'; closeSidebar(); }
-
-/* New note button */
-document.getElementById( 'new-note' ).onclick = async () => {
+newNote.onclick = async () => {
 	requireDoubleTap = false;
 	await loadMetaOnce(); // ← 必ず先に呼ぶ
 	// 本文ドキュメントを1件だけ作る
@@ -1681,10 +1645,8 @@ document.getElementById( 'new-note' ).onclick = async () => {
 	location.hash = `#/editor/${ref.id}`;
 	closeSidebar();
 };
-document.getElementById( 'new-note-2' ).onclick =
-	document.getElementById( 'new-note' ).onclick;
-/* Navigation */
-async function navigate() {
+newNote2.onclick =newNote.onclick;
+async function navigate() {/* Navigation */
 	if ( !auth.currentUser ) {
 		show( 'login' );
 		return;
@@ -1703,7 +1665,6 @@ async function navigate() {
 		loadTrash();
 
 		// ★ Empty Trash ボタンの設定 ★
-		const emptyTrashBtn = document.getElementById( 'empty-trash-btn' );
 		if ( emptyTrashBtn ) {
 			emptyTrashBtn.onclick = async () => {
 				if ( !metaCache || !Array.isArray( metaCache.notes ) ) return;
