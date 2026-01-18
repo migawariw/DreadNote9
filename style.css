@@ -407,7 +407,7 @@ font-weight: bold;
 margin-left: 0;
 }
 
-#user-icon {
+#user-icon,#user-icon2 {
 /* position: absolute; */
 /* position: fixed; */
 z-index: 10000;
@@ -416,17 +416,6 @@ width: 40px;
 height: 40px;
 /* top: 0px; */
 /* top: 10px; */
-right: calc((100% - 800px)/2 + 0px);
-/* 親の右端から16px */
-border-radius: 50%;
-cursor: pointer;
-}
-
-#user-icon2 {
-z-index: 10000;
-background: transparent;
-width: 40px;
-height: 40px;
 right: calc((100% - 800px)/2 + 0px);
 /* 親の右端から16px */
 border-radius: 50%;
@@ -446,9 +435,7 @@ right: 0;
 }
 }
 
-#user-menu,
-#user-menu2,
-#sort-menu {
+.menu-panel {
 position: absolute;
 /* position: fixed; */
 top: 70px;
@@ -465,16 +452,11 @@ overflow: hidden;
 }
 /* モバイルなど画面幅 < 800px の場合は右端16px固定 */
 @media (max-width: 799px) {
-#user-menu,
-#user-menu2,
-#sort-menu{
+.menu-panel {
 right: 0px;
 }
 }
-
-#user-menu button,
-#user-menu2 button,
-#sort-menu button {
+.menu-panel button{
 display: block;
 width: 100%;
 padding: 10px 16px;
@@ -482,32 +464,29 @@ color: #0071e3;
 background: none;
 border: none;
 text-align: left;
-font-size: 15px;
+font-size: 18px;
 }
 
-#user-menu button:hover,
-#user-menu2 button:hover,
-#sort-menu button:hover {
+.menu-panel button:hover {
 background: #f2f2f7;
 z-index: 3;
 }
-
-body.dark #user-menu,
-body.dark #user-menu2,
-body.dark #sort-menu {
-background: #1c1c1e;
+#sort-menu button.checked::before {
+    content: '✔ ';  /* チェックマークを表示 */
+}
+#sort-menu button {
+  text-align: right;
+}
+body.dark .menu-panel {
+background: #131313;
 border-color: #333;
 }
 
-body.dark #user-menu button,
-body.dark #user-menu2 button,
-body.dark #sort-menu button{
+body.dark .menu-panel button{
 color: #007fff;
 }
 
-body.dark #user-menu button:hover,
-body.dark #user-menu2 button:hover,
-body.dark #sort-menu button:hover {
+body.dark .menu-panel button:hover {
 background: #24242e;
 }
 

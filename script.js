@@ -409,6 +409,10 @@ sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙�
     currentSort = btn.dataset.value; // 選択値を currentSort に保存
     sortMenu.style.display = 'none';
 
+		// ✅ チェックマーク更新
+    sortMenu.querySelectorAll('button').forEach(b => b.classList.remove('checked'));
+    btn.classList.add('checked');
+
     // ボタン表示に反映
     // sortBtn.textContent = btn.textContent;
 
@@ -416,6 +420,16 @@ sortMenu.querySelectorAll('button').forEach(btn => {// ソートした時の挙�
     loadNotes(currentSort);
   });
 });
+
+// ページロードやメニューを開いた時に呼ぶ
+function updateSortMenuCheck() {
+  sortMenu.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('checked', b.dataset.value === currentSort);
+  });
+}
+
+// 最初に呼ぶ
+updateSortMenuCheck();
 async function loadNotes(sortBy = 'pinned+updated') {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
