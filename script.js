@@ -100,7 +100,7 @@ sidebarToggle.onclick = async () => {
 		await loadMetaOnce();   // まず metaCache をロード
 		await loadNotes(currentSort);      // メモ一覧を描画
 		// ✅ 念押しで sidebar の font を更新
-    applySidebarFontSize(savedSize);
+    applyFontSize(savedSize);
 	}
 };
 function closeSidebar() {
