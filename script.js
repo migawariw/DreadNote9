@@ -98,9 +98,9 @@ sidebarToggle.onclick = async () => {
 	if ( sidebar.classList.contains( 'show' ) ) {
 		requireDoubleTap = true; // ← ★リセット
 		await loadMetaOnce();   // まず metaCache をロード
-		await loadNotes(currentSort);      // メモ一覧を描画
+		await loadNotes( currentSort );      // メモ一覧を描画
 		// ✅ 念押しで sidebar の font を更新
-    applyFontSize(savedSize);
+		applyFontSize( savedSize );
 	}
 };
 function closeSidebar() {
@@ -151,26 +151,26 @@ fontBtn.onclick = e => {
 	if ( !isOpen ) fontPopup.style.display = 'block';
 	closeSidebar();
 };
-let savedSize = localStorage.getItem('dreadnote-font-size') || 18;
-function applyFontSize(size) {
-  const px = size + 'px';
+let savedSize = localStorage.getItem( 'dreadnote-font-size' ) || 18;
+function applyFontSize( size ) {
+	const px = size + 'px';
 
-  document.body.style.fontSize = px;
-  editor.style.fontSize = px;
+	document.body.style.fontSize = px;
+	editor.style.fontSize = px;
 
-  // sidebar（存在する分だけ）
-  noteList.querySelectorAll('li').forEach(li => {
-    li.style.fontSize = px;
-  });
+	// sidebar（存在する分だけ）
+	noteList.querySelectorAll( 'li' ).forEach( li => {
+		li.style.fontSize = px;
+	} );
 
-  fontSlider.value = size;
-  fontValue.textContent = px;
+	fontSlider.value = size;
+	fontValue.textContent = px;
 }
 fontSlider.oninput = e => {
-  savedSize = Number(fontSlider.value);
+	savedSize = Number( fontSlider.value );
 
-  applyFontSize(savedSize);
-  localStorage.setItem('dreadnote-font-size', savedSize);
+	applyFontSize( savedSize );
+	localStorage.setItem( 'dreadnote-font-size', savedSize );
 };
 //端末に初期値があればそれにする　ずれの原因これじゃね？まあいいや
 if ( savedSize ) {
@@ -474,27 +474,27 @@ async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバ�
 	renderNoteCount();
 	updateSortButtonIcon();
 }
-function createNoteElement(m, sortBy = currentSort) {
-  const li = document.createElement('li');
-  li.className = m.id === currentNoteId ? 'active' : '';
-  li.style.fontSize = savedSize + 'px';
+function createNoteElement( m, sortBy = currentSort ) {
+	const li = document.createElement( 'li' );
+	li.className = m.id === currentNoteId ? 'active' : '';
+	li.style.fontSize = savedSize + 'px';
 
-  // pinned マーク
-  const pinMark = ((sortBy === 'pinned+updated' || sortBy === 'pinned+created') && m.pinned) ? '』' : '';
-  const favStar = m.favorite ? '★ ' : '';
+	// pinned マーク
+	const pinMark = ( ( sortBy === 'pinned+updated' || sortBy === 'pinned+created' ) && m.pinned ) ? '』' : '';
+	const favStar = m.favorite ? '★ ' : '';
 
-  // 内部 HTML
-  li.innerHTML = `
+	// 内部 HTML
+	li.innerHTML = `
     <a href="#/editor/${m.id}" class="note-link" style="position:absolute;inset:0;text-decoration:none;color:inherit;font-size:${savedSize}px;"></a>
     <span class="note-title">${favStar}${m.title || 'New Note'}</span>
     <div class="note-right" style="position:relative;">
       <span class="date-span">
-        ${new Date(getNoteDisplayTime(m, sortBy)).toLocaleString('ja-JP',{
-          year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'
-        })}
+        ${new Date( getNoteDisplayTime( m, sortBy ) ).toLocaleString( 'ja-JP', {
+		year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+	} )}
         ${pinMark}
       </span>
-      <span class="size-span ${isLargeSize(m.size) ? 'size-warning' : ''}">${formatSize(m.size || 0)}</span>
+      <span class="size-span ${isLargeSize( m.size ) ? 'size-warning' : ''}">${formatSize( m.size || 0 )}</span>
       <button class="menu-btn">　　⁝</button>
       <div class="menu-panel" style="top:2em;right:-12px;">
         <button class="fav-btn">${m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り'}</button>
@@ -505,77 +505,77 @@ function createNoteElement(m, sortBy = currentSort) {
     </div>
   `;
 
-  // イベント設定
+	// イベント設定
 
-  // メモリンク
-  li.querySelector('.note-link').onclick = e => {
-    e.preventDefault();
-    location.hash = `#/editor/${m.id}`;
-    setTimeout(closeSidebar, 100);
-  };
+	// メモリンク
+	li.querySelector( '.note-link' ).onclick = e => {
+		e.preventDefault();
+		location.hash = `#/editor/${m.id}`;
+		setTimeout( closeSidebar, 100 );
+	};
 
-  const menuBtn = li.querySelector('.menu-btn');
-  const menuPopup = li.querySelector('.menu-panel');
+	const menuBtn = li.querySelector( '.menu-btn' );
+	const menuPopup = li.querySelector( '.menu-panel' );
 
-  // メニュー開閉
-  menuBtn.onclick = e => {
-    e.stopPropagation();
-    const isOpen = menuPopup.style.display === 'block';
-    closeAllMenus();
-    menuPopup.style.display = isOpen ? 'none' : 'block';
-  };
+	// メニュー開閉
+	menuBtn.onclick = e => {
+		e.stopPropagation();
+		const isOpen = menuPopup.style.display === 'block';
+		closeAllMenus();
+		menuPopup.style.display = isOpen ? 'none' : 'block';
+	};
 
-  menuBtn.addEventListener('pointerdown', () => menuBtn.classList.add('pressed'));
-  menuBtn.addEventListener('pointerup', () => menuBtn.classList.remove('pressed'));
-  menuBtn.addEventListener('pointerleave', () => menuBtn.classList.remove('pressed'));
+	menuBtn.addEventListener( 'pointerdown', () => menuBtn.classList.add( 'pressed' ) );
+	menuBtn.addEventListener( 'pointerup', () => menuBtn.classList.remove( 'pressed' ) );
+	menuBtn.addEventListener( 'pointerleave', () => menuBtn.classList.remove( 'pressed' ) );
 
-  // favorite
-  li.querySelector('.fav-btn').onclick = async e => {
-    e.stopPropagation();
-    m.favorite = !m.favorite;
-    await saveMeta();
-    menuPopup.style.display = 'none';
-    loadNotes(currentSort);
-  };
+	// favorite
+	li.querySelector( '.fav-btn' ).onclick = async e => {
+		e.stopPropagation();
+		m.favorite = !m.favorite;
+		await saveMeta();
+		menuPopup.style.display = 'none';
+		loadNotes( currentSort );
+	};
 
-  // pin
-  li.querySelector('.pin-btn').onclick = e => {
-    e.stopPropagation();
-    menuPopup.style.display = 'none';
-    openPinModal(m);
-  };
+	// pin
+	li.querySelector( '.pin-btn' ).onclick = e => {
+		e.stopPropagation();
+		menuPopup.style.display = 'none';
+		openPinModal( m );
+	};
 
-  // copy
-  li.querySelector('.copy-btn').onclick = async e => {
-    e.stopPropagation();
-    const content = noteCache[m.id]?.content;
-    if (!content) {
-      showToast('一度メモを開いてください');
-      return;
-    }
-    const markdown = htmlToMarkdown(content);
-    try {
-      await navigator.clipboard.writeText(markdown);
-      showToast('Copied as Markdown');
-    } catch {
-      showToast('Failed to copy');
-    }
-    menuPopup.style.display = 'none';
-  };
+	// copy
+	li.querySelector( '.copy-btn' ).onclick = async e => {
+		e.stopPropagation();
+		const content = noteCache[m.id]?.content;
+		if ( !content ) {
+			showToast( '一度メモを開いてください' );
+			return;
+		}
+		const markdown = htmlToMarkdown( content );
+		try {
+			await navigator.clipboard.writeText( markdown );
+			showToast( 'Copied as Markdown' );
+		} catch {
+			showToast( 'Failed to copy' );
+		}
+		menuPopup.style.display = 'none';
+	};
 
-  // delete
-  li.querySelector('.del-btn').onclick = async e => {
-    e.stopPropagation();
-    m.deleted = true;
-    await saveMeta();
-    loadNotes();
-    if (location.hash === '#/trash') loadTrash();
-    showToast(`${m.title || 'New Note'} was Moved to Trash`);
-    menuPopup.style.display = 'none';
-    if (currentNoteId === m.id) location.hash = '#/home';
-  };
+	// delete
+	li.querySelector( '.del-btn' ).onclick = async e => {
+		e.stopPropagation();
+		m.deleted = true;
+		await saveMeta();
+		loadNotes();
+		if ( location.hash === '#/trash' ) loadTrash();
+		showToast( `${m.title || 'New Note'} was Moved to Trash` );
+		menuPopup.style.display = 'none';
+		if ( currentNoteId === m.id ) location.hash = '#/home';
+	};
 
-  return li;
+	return li;
 }
 function getNoteDisplayTime( note, sortBy ) {// 🔹 表示時刻取得関数（sortSelect に連動）
 	switch ( sortBy ) {
@@ -843,20 +843,20 @@ async function showEditor( data ) {// dataからhtmlを表示する関数
 	} );
 }
 function updateSortButtonIcon() {
-  switch (currentSort) {
-    case 'pinned+updated':
-      sortBtn.textContent = '』⇅'; // 固定 + 更新
-      break;
-    case 'pinned+created':
-      sortBtn.textContent = '』＋'; // 固定 + 作成
-      break;
-    case 'updated':
-      sortBtn.textContent = '⇅'; // 更新順
-      break;
-    case 'created':
-      sortBtn.textContent = '＋'; // 作成順
-      break;
-  }
+	switch ( currentSort ) {
+		case 'pinned+updated':
+			sortBtn.textContent = '』⇅'; // 固定 + 更新
+			break;
+		case 'pinned+created':
+			sortBtn.textContent = '』＋'; // 固定 + 作成
+			break;
+		case 'updated':
+			sortBtn.textContent = '⇅'; // 更新順
+			break;
+		case 'created':
+			sortBtn.textContent = '＋'; // 作成順
+			break;
+	}
 }
 function updateTimestamp( noteId ) {// --- タイムスタンプ更新関数 ---
 	const meta = getMeta( noteId );
@@ -1677,17 +1677,17 @@ editor.addEventListener( 'keydown', ( e ) => {
 
 	editor.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 } );
-document.addEventListener('keydown', (e) => {
-  // Macの場合の Cmd+B
-  if (e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'b') {
-    e.preventDefault(); // ブラウザの太字ショートカット（Cmd+B）を抑制
-    sidebar.classList.toggle('show');
-			closeAllMenus();
-    if (sidebar.classList.contains('show')) {
-      loadMetaOnce().then(() => loadNotes());
-    }
-  }
-});
+document.addEventListener( 'keydown', ( e ) => {
+	// Macの場合の Cmd+B
+	if ( e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'b' ) {
+		e.preventDefault(); // ブラウザの太字ショートカット（Cmd+B）を抑制
+		sidebar.classList.toggle( 'show' );
+		closeAllMenus();
+		if ( sidebar.classList.contains( 'show' ) ) {
+			loadMetaOnce().then( () => loadNotes() );
+		}
+	}
+} );
 /* 7️⃣ ナビゲーション・新規作成ボタン*/
 newNote.onclick = async () => {
 	requireDoubleTap = false;
