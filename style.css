@@ -115,6 +115,7 @@ transition: transform 0.3s ease;
 overflow-y: auto;
 z-index: 1300;
 padding-right: 10px;
+padding-left: 10px;
 border-radius: 10px;
 box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
 }
@@ -178,14 +179,15 @@ background: black;
 
 li {
 list-style: none;
-border-bottom: 1px solid #ddd;
+/* border-bottom: 1px solid #ddd; */
+border-radius: 16px;
 display: flex;
 justify-content: space-between;
 position: relative;
 user-select: none;
 cursor: default;
 flex-direction: column;
-padding: 8px 12px;
+padding: 6px 10px 3px 10px;
 /* paddingは最後に書く必要があるらしい*/
 }
 
@@ -200,13 +202,6 @@ text-decoration: none;
 color: inherit;
 z-index: 1;
 }
-/* li:hover {
-background: rgba(0, 0, 0, 0.04);
-} */
-
-/* body.dark li:hover {
-background: #101010;
-} */
 
 li .note-title {
 font-weight: 610;
@@ -218,13 +213,11 @@ margin-right: 8px;
 }
 
 #note-list li.active {
-/* background-color: rgb(240, 240, 240); */
-background: hsl(210, 4%, 91%);
-border-left: 4px solid #0071e3;
+background-color: rgba(0, 0, 0, 0.06);
 }
 
 body.dark #note-list li.active {
-background-color: rgb(28, 28, 28);
+background-color: rgba(255, 255, 255, 0.06);
 }
 
 .date-span {
@@ -265,12 +258,12 @@ text-align: right;
 .menu-btn {
 font-size: 18px;
 padding: 6px 12px;
-border-radius: 6px;
+border-radius: 16px;
 user-select: none;
 line-height: 0;
 color: #666;
 z-index: 2;
-margin: -26px -10px -10px -10px;
+margin: -1.6em -10px -4px -0.55em;
 /* 見た目を上にずらす */
 border: none;
 cursor: pointer;
@@ -363,11 +356,11 @@ cursor: pointer;
 }
 
 /* モバイルなど画面幅 < 800px の場合は右端16px固定 */
-@media (max-width: 799px) {
+/* @media (max-width: 799px) {
 #user-icon,#user-icon2 {
 right: 0;
 }
-}
+} */
 
 .menu-panel {
 position: absolute;
