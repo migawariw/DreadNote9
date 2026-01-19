@@ -1298,6 +1298,7 @@ const embedHandlers = [//SNSリンクを判定して対応する埋め込みhtml
 			iframe.src = `https://embed.nicovideo.jp/watch/${m[1]}`;
 			iframe.setAttribute( 'frameborder', '0' );
 			iframe.setAttribute( 'allowfullscreen', '' );
+			iframe.allowFullscreen = true;
 			wrap.appendChild( iframe );
 			wrap.dataset.url = url;
 			return wrap;
