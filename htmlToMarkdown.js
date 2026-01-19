@@ -30,7 +30,14 @@ export function htmlToMarkdown( html ) {
 						return '*' + traverseChildren( node ) + '*';
 					case 'br':
 						return '\n';
-					case 'div':
+					case 'div': {
+	// embed wrapper
+	if ( node.dataset?.url ) {
+		const url = node.dataset.url;
+		return `[${url}](${url})\n\n`;
+	}
+	return traverseChildren( node ) + '\n';
+}
 					case 'p':
 						return traverseChildren( node ) + '\n';
 					case 'ul':
