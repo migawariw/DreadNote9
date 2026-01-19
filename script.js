@@ -1294,7 +1294,7 @@ const embedHandlers = [//SNSリンクを判定して対応する埋め込みhtml
 			const wrap = document.createElement( 'div' );
 			wrap.className = 'video'; // CSSの幅とpadding-topを使う
 			const iframe = document.createElement( 'iframe' );
-			iframe.src = `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0&playsinline=1`;
+			iframe.src = `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0&playsinline=1&vq=hd1080`;
 			iframe.allowFullscreen = true;
 			wrap.appendChild( iframe );
 			wrap.dataset.url = url;
@@ -1749,6 +1749,17 @@ editor.addEventListener( 'keydown', ( e ) => {
 
 	editor.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 } );
+document.addEventListener('keydown', (e) => {
+  // Macの場合の Cmd+B
+  if (e.metaKey && !e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'b') {
+    e.preventDefault(); // ブラウザの太字ショートカット（Cmd+B）を抑制
+    sidebar.classList.toggle('show');
+			closeAllMenus();
+    if (sidebar.classList.contains('show')) {
+      loadMetaOnce().then(() => loadNotes());
+    }
+  }
+});
 /* 7️⃣ ナビゲーション・新規作成ボタン*/
 newNote.onclick = async () => {
 	requireDoubleTap = false;

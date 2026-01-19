@@ -609,7 +609,14 @@ display: flex;
 gap: 8px;
 margin-top: 16px;
 }
+.pin-modal-container .pin-modal-buttons button:active {
+  transform: scale(0.95);
+  background-color: #ddd; /* 好きな色に変更可 */
+}
 
+body.dark .pin-modal-container .pin-modal-buttons button:active {
+  background-color: #333; /* ダークモード対応 */
+}
 .pin-modal-container .pin-modal-remove {
 margin-right: auto;
 color: red;
