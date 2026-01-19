@@ -436,7 +436,8 @@ updateSortMenuCheck();// 最初に呼ぶ
 async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバーに表示する
 	await loadMetaOnce();
 	noteList.innerHTML = '';
-	metaCache.notes
+	const fragment = document.createDocumentFragment(); // まとめて追加用
+	const notes = metaCache.notes
 		.filter( m => !m.deleted )
 		.sort( ( a, b ) => {
 			// ① favorite を最優先
@@ -462,192 +463,119 @@ async function loadNotes( sortBy = currentSort ) {//メモ一覧をサイドバ�
 					return bTime - aTime;
 				}
 			}
-		} )
-		.forEach( m => {
-
-			const li = document.createElement( 'li' );
-			li.style.fontSize = savedSize + 'px'; // ← 一覧に反映
-			// 🔹 現在開いているメモに active クラス
-			if ( m.id === currentNoteId ) {
-				li.classList.add( 'active' );
-			}
-
-			/* ========== li 全体を覆う a ========== */
-			const link = document.createElement( 'a' );
-			link.href = `#/editor/${m.id}`;
-			link.className = 'note-link';
-			link.style.position = 'absolute';
-			link.style.top = '0';
-			link.style.left = '0';
-			link.style.width = '100%';
-			link.style.height = '100%';
-			link.style.textDecoration = 'none';
-			link.style.color = 'inherit';
-			link.style.fontSize = savedSize;
-			link.onclick = e => {
-				e.preventDefault();
-				location.hash = `#/editor/${m.id}`;
-				setTimeout( () => {
-					closeSidebar();
-				}, 100 );
-			};
-			li.appendChild( link );
-
-
-
-			//左側タイトル
-
-			const titleSpan = document.createElement( 'span' );
-			titleSpan.className = 'note-title';
-			titleSpan.textContent = m.title || 'New Note';
-			// titleSpan.style.fontSize = savedSize;
-			li.appendChild( titleSpan );
-
-			// 右側（日付 + メニュー）
-			const rightDiv = document.createElement( 'div' );
-			rightDiv.className = 'note-right';
-			const sizeSpan = document.createElement( 'span' );
-			sizeSpan.className = 'size-span';
-			sizeSpan.textContent = formatSize( m.size || 0 );
-			if ( isLargeSize( m.size ) ) {
-				sizeSpan.classList.add( 'size-warning' );
-			}
-
-			const dateSpan = document.createElement( 'span' );
-			dateSpan.className = 'date-span';
-			const displayDate = getNoteDisplayTime( m, sortBy );
-			dateSpan.textContent = new Date( displayDate ).toLocaleString( 'ja-JP', {
-				year: 'numeric', month: '2-digit', day: '2-digit',
-				hour: '2-digit', minute: '2-digit'
-			} );
-			// 🔹 pinned ならマークを追加
-			if ( ( sortBy === 'pinned+updated' || sortBy === 'pinned+created' ) && m.pinned ) {
-				const pin = document.createElement( 'span' );
-				pin.textContent = '』';
-				pin.style.marginLeft = '4px';
-				dateSpan.appendChild( pin );
-			}
-
-			/* ⋯ メニュー */
-			const menuBtn = document.createElement( 'button' );
-			menuBtn.textContent = '　　⁝';
-			menuBtn.className = 'menu-btn';
-
-			const menuPopup = document.createElement( 'div' );
-			menuPopup.className = 'menu-panel';
-			menuPopup.style.top = '2em'
-			menuPopup.style.right = '-12px'
-			// 例えば右側の div を親にする場合
-			rightDiv.style.position = 'relative'; // 親に relative を付与
-
-			// ⭐ favorite ボタン（追加）
-			const favBtn = document.createElement( 'button' );
-			favBtn.textContent = m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り';
-			favBtn.onclick = async ( e ) => {
-				e.stopPropagation();
-
-				m.favorite = !m.favorite;
-
-				await saveMeta();          // 永続化
-				menuPopup.style.display = 'none';
-
-				loadNotes( currentSort );    // 並び即反映
-			};
-			if ( m.favorite ) {
-				const star = document.createElement( 'span' );
-				star.textContent = '★';
-				star.style.marginRight = '4px';
-				titleSpan.prepend( star );
-			}
-			// 📌 ピンボタン
-			const pinBtn = document.createElement( 'button' );
-			pinBtn.textContent = m.pinned ? '』 時刻変更' : '』 時刻固定';
-			pinBtn.onclick = ( e ) => {
-				e.stopPropagation();
-				menuPopup.style.display = 'none';
-				openPinModal( m );
-			};
-			rightDiv.appendChild( pinBtn );
-
-
-			const copyBtn = document.createElement( 'button' );
-			copyBtn.textContent = 'Copy as md';
-			copyBtn.onclick = async ( e ) => {
-				e.stopPropagation();
-
-				// メモの内容をキャッシュから取得（なければ Firestore 取得）
-				let content = noteCache[m.id]?.content;
-				if ( !content ) {
-					// const snap = await getDoc(doc(db, 'users', `${auth.currentUser.email.split('@')[0]}-${auth.currentUser.uid}`, 'notes', m.id));
-					// content = snap.data()?.content || '';
-					showToast( '一度メモを開いてください' );
-					return;
-				}
-
-				// HTML → Markdown に変換
-				const markdown = htmlToMarkdown( content );
-
-				// クリップボードにコピー
-				try {
-					await navigator.clipboard.writeText( markdown );
-					showToast( 'Copied as Markdown' );
-				} catch ( err ) {
-					showToast( 'Failed to copy' );
-					console.error( err );
-				}
-
-				menuPopup.style.display = 'none';
-			};
-
-			const delBtn = document.createElement( 'button' );
-			delBtn.textContent = 'Trash';
-			delBtn.style.color = 'red';
-			delBtn.onclick = async ( e ) => {
-				e.stopPropagation();
-				m.deleted = true;
-				await saveMeta();
-				loadNotes();
-				if ( location.hash === '#/trash' ) {
-					loadTrash();
-				}
-				showToast( `${m.title || 'New Note'} was Moved to Trash` );
-				menuPopup.style.display = 'none';
-				if ( currentNoteId === m.id ) {
-					location.hash = '#/home';
-				}
-			};
-
-			menuPopup.append( favBtn, pinBtn, copyBtn, delBtn );
-			menuBtn.onclick = e => {
-				e.stopPropagation();
-
-				const isOpen = menuPopup.style.display === 'block';
-
-				closeAllMenus();
-
-				if ( !isOpen ) {
-					menuPopup.style.display = 'block';
-				}
-			};
-			menuBtn.addEventListener('pointerdown', () => {
-  menuBtn.classList.add('pressed');
-});
-menuBtn.addEventListener('pointerup', () => {
-  menuBtn.classList.remove('pressed');
-});
-menuBtn.addEventListener('pointerleave', () => {
-  menuBtn.classList.remove('pressed');
-});
-
-			rightDiv.append( dateSpan, sizeSpan, menuBtn, menuPopup );
-			//aタグの中に右側も入れる
-			li.appendChild( rightDiv );
-			//li に a を追加
-			noteList.appendChild( li );
 		} );
+	notes.forEach( m => {
+		const li = createNoteElement( m ); // liを作る処理を関数にまとめる
+		fragment.appendChild( li );
+	} );
+
+	noteList.appendChild( fragment );
 	renderTotalSize();
 	renderNoteCount();
-updateSortButtonIcon();
+	updateSortButtonIcon();
+}
+function createNoteElement(m, sortBy = currentSort) {
+  const li = document.createElement('li');
+  li.className = m.id === currentNoteId ? 'active' : '';
+  li.style.fontSize = savedSize + 'px';
+
+  // pinned マーク
+  const pinMark = ((sortBy === 'pinned+updated' || sortBy === 'pinned+created') && m.pinned) ? '』' : '';
+  const favStar = m.favorite ? '★ ' : '';
+
+  // 内部 HTML
+  li.innerHTML = `
+    <a href="#/editor/${m.id}" class="note-link" style="position:absolute;inset:0;text-decoration:none;color:inherit;font-size:${savedSize}px;"></a>
+    <span class="note-title">${favStar}${m.title || 'New Note'}</span>
+    <div class="note-right" style="position:relative;">
+      <span class="date-span">
+        ${new Date(getNoteDisplayTime(m, sortBy)).toLocaleString('ja-JP',{
+          year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'
+        })}
+        ${pinMark}
+      </span>
+      <span class="size-span ${isLargeSize(m.size) ? 'size-warning' : ''}">${formatSize(m.size || 0)}</span>
+      <button class="menu-btn">　　⁝</button>
+      <div class="menu-panel" style="top:2em;right:-12px;">
+        <button class="fav-btn">${m.favorite ? '★ お気に入り解除' : '　　☆ お気に入り'}</button>
+        <button class="pin-btn">』 ${m.pinned ? '時刻変更' : '時刻固定'}</button>
+        <button class="copy-btn">Copy as md</button>
+        <button class="del-btn" style="color:red;">Trash</button>
+      </div>
+    </div>
+  `;
+
+  // イベント設定
+
+  // メモリンク
+  li.querySelector('.note-link').onclick = e => {
+    e.preventDefault();
+    location.hash = `#/editor/${m.id}`;
+    setTimeout(closeSidebar, 100);
+  };
+
+  const menuBtn = li.querySelector('.menu-btn');
+  const menuPopup = li.querySelector('.menu-panel');
+
+  // メニュー開閉
+  menuBtn.onclick = e => {
+    e.stopPropagation();
+    const isOpen = menuPopup.style.display === 'block';
+    closeAllMenus();
+    menuPopup.style.display = isOpen ? 'none' : 'block';
+  };
+
+  menuBtn.addEventListener('pointerdown', () => menuBtn.classList.add('pressed'));
+  menuBtn.addEventListener('pointerup', () => menuBtn.classList.remove('pressed'));
+  menuBtn.addEventListener('pointerleave', () => menuBtn.classList.remove('pressed'));
+
+  // favorite
+  li.querySelector('.fav-btn').onclick = async e => {
+    e.stopPropagation();
+    m.favorite = !m.favorite;
+    await saveMeta();
+    menuPopup.style.display = 'none';
+    loadNotes(currentSort);
+  };
+
+  // pin
+  li.querySelector('.pin-btn').onclick = e => {
+    e.stopPropagation();
+    menuPopup.style.display = 'none';
+    openPinModal(m);
+  };
+
+  // copy
+  li.querySelector('.copy-btn').onclick = async e => {
+    e.stopPropagation();
+    const content = noteCache[m.id]?.content;
+    if (!content) {
+      showToast('一度メモを開いてください');
+      return;
+    }
+    const markdown = htmlToMarkdown(content);
+    try {
+      await navigator.clipboard.writeText(markdown);
+      showToast('Copied as Markdown');
+    } catch {
+      showToast('Failed to copy');
+    }
+    menuPopup.style.display = 'none';
+  };
+
+  // delete
+  li.querySelector('.del-btn').onclick = async e => {
+    e.stopPropagation();
+    m.deleted = true;
+    await saveMeta();
+    loadNotes();
+    if (location.hash === '#/trash') loadTrash();
+    showToast(`${m.title || 'New Note'} was Moved to Trash`);
+    menuPopup.style.display = 'none';
+    if (currentNoteId === m.id) location.hash = '#/home';
+  };
+
+  return li;
 }
 function getNoteDisplayTime( note, sortBy ) {// 🔹 表示時刻取得関数（sortSelect に連動）
 	switch ( sortBy ) {
