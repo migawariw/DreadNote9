@@ -562,6 +562,9 @@ margin: 0 auto;
 
 /* .video,.twitter,.instagram,.tiktok{
 border: 5px red solid;
+}
+.video iframe,.twitter iframe,.tiktok iframe{
+  border:#0071e3 5px solid;
 } */
 
 
