@@ -506,7 +506,7 @@ border: 0;
 margin: 0;
 z-index: 1200;
 }
-@media (max-width: 800px) and (orientation: landscape) and (min-aspect-ratio: 18/10) {
+@media (orientation: landscape) and (min-aspect-ratio: 18/10) {
 .video {
 height: 100vh;
 }
