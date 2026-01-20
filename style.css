@@ -133,7 +133,7 @@ transform: translateX(0);
 
 #sidebar-toggle {
 position: fixed;
-top: 0px;
+top: 10px;
 left: 10px;
 z-index: 1100;
 padding-top: 0;
@@ -444,7 +444,7 @@ right: calc((100% - 800px)/2 + 20px);
 }
 #editor {
 min-height: 70vh;
-padding-top: 30px;
+padding-top: 35px;
 outline: none;
 white-space: pre-wrap;
 word-break: break-word;
