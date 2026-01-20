@@ -350,7 +350,7 @@ z-index: 10000;
 background: transparent;
 width: 40px;
 height: 40px;
-right: calc((100% - 800px)/2 + 0px);
+right: calc((100% - 800px)/2 + 16px);
 border-radius: 50%;
 cursor: pointer;
 }
@@ -361,6 +361,9 @@ cursor: pointer;
 right: 0;
 }
 } */
+#view-home{
+  max-width: 800px;
+}
 
 .menu-panel {
 position: absolute;
