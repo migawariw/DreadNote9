@@ -506,6 +506,15 @@ border: 0;
 margin: 0;
 z-index: 1200;
 }
+@media (max-width: 800px) and (orientation: landscape) and (min-aspect-ratio: 18/10) {
+.video {
+height: 100vh;
+}
+.video iframe {
+height: 100vh;
+object-fit: contain; /* ←追加 */
+}
+}
 
 /* TikTok 用（縦長） */
 .tiktok {
