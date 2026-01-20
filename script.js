@@ -1689,6 +1689,43 @@ document.addEventListener( 'keydown', ( e ) => {
 		}
 	}
 } );
+editor.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+
+  const sel = document.getSelection();
+  if (!sel.rangeCount) return;
+
+  const range = sel.getRangeAt(0);
+
+  let node = range.startContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+
+  // 埋め込みブロック内か？
+const embed = node.closest?.('[data-url]');
+if (!embed) return;
+
+e.preventDefault();
+
+// embed の直後に改行を作る
+const br = document.createElement('br');
+
+if (embed.nextSibling) {
+  embed.parentNode.insertBefore(br, embed.nextSibling);
+} else {
+  embed.parentNode.appendChild(br);
+}
+
+  // caret を br の後へ
+  const r = document.createRange();
+  r.setStartAfter(br);
+  r.collapse(true);
+
+  sel.removeAllRanges();
+  sel.addRange(r);
+
+  editor.focus();
+  editor.dispatchEvent(new Event('input', { bubbles: true }));
+});
 /* 7️⃣ ナビゲーション・新規作成ボタン*/
 newNote.onclick = async () => {
 	requireDoubleTap = false;
