@@ -215,7 +215,9 @@ if (darkBtn) {
 
 				wrap.innerHTML = '';
 				twttr.widgets.createTweet(tweetId, wrap, {
-					theme: isOn ? 'dark' : 'light'
+					theme: isOn ? 'dark' : 'light',
+					lang: 'ja',
+					align:'left'
 				});
 			});
 		});
