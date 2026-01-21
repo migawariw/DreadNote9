@@ -182,33 +182,44 @@ if ( savedSize ) {
 
 // 初期状態を localStorage から取得
 
-// localStorage の値を取得
-let darkOn = localStorage.getItem( 'dreadnote-dark' );
-if ( darkOn ) document.body.classList.add( 'dark' );
+function getInitialDarkOn() {
+	const saved = localStorage.getItem('dreadnote-dark'); // '1' | '0' | null
 
+	if (saved !== null) {
+		return saved === '1';
+	}
 
-if ( darkOn === null ) {
-	// localStorage に値がなければ端末の設定を確認
-	darkOn = window.matchMedia && window.matchMedia( '(prefers-color-scheme: dark)' ).matches;
-} else {
-	// localStorage に値がある場合は '1' が true, それ以外は false
-	darkOn = darkOn === '1';
+	return window.matchMedia &&
+		window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-// console.log('Dark mode:', darkOn);
-//ダークモードにするかどうかは端末に保存
-if ( darkBtn ) {
-	darkBtn.textContent = darkOn ? '　　Light mode' : 'Dark mode';
-	darkBtn.onclick = ( e ) => {
-		e.stopPropagation();
-		document.body.classList.toggle( 'dark' );
-		const isOn = document.body.classList.contains( 'dark' );
-		localStorage.setItem(
-			'dreadnote-dark',
-			document.body.classList.contains( 'dark' ) ? '1' : '0'
-		);
-		darkBtn.textContent = isOn ? 'Light mode' : 'Dark mode';
+const darkOn = getInitialDarkOn();
+document.body.classList.toggle('dark', darkOn);
 
+if (darkBtn) {
+	darkBtn.textContent = darkOn ? 'Light mode' : 'Dark mode';
+
+	darkBtn.onclick = (e) => {
+		e.stopPropagation();
+
+		const isOn = document.body.classList.toggle('dark');
+		localStorage.setItem('dreadnote-dark', isOn ? '1' : '0');
+		darkBtn.textContent = isOn ? 'Light mode' : 'Dark mode';
+		// ② Twitter 再レンダリング
+	if (window.twttr) {
+		twttr.ready(() => {
+			editor.querySelectorAll('.twitter[data-url]').forEach(wrap => {
+				const url = wrap.dataset.url;
+				const tweetId = url.match(/status\/(\d+)/)?.[1];
+				if (!tweetId) return;
+
+				wrap.innerHTML = '';
+				twttr.widgets.createTweet(tweetId, wrap, {
+					theme: isOn ? 'dark' : 'light'
+				});
+			});
+		});
+	}
 	};
 }
 // 初期状態を localStorage から取得
@@ -229,10 +240,7 @@ if ( spreadBtn ) {
 	};
 }
 
-// 端末から保存状態を反映
-if ( localStorage.getItem( 'dreadnote-dark' ) === '1' ) {
-	document.body.classList.add( 'dark' );
-}
+
 if ( localStorage.getItem( 'dreadnote-spread' ) === '1' ) {
 	document.body.classList.add( 'spread' );
 }
@@ -830,6 +838,9 @@ if (window.twttr) {
 
       wrap.innerHTML = '';
       twttr.widgets.createTweet(tweetId, wrap, {
+				theme: darkOn ? 'dark' : 'light',
+					lang: 'ja',
+					align:'left'
         // width: '100%'
       });
     });
@@ -1340,7 +1351,10 @@ function renderTwitterEmbeds(root = editor) {
         wrap.dataset.rendered = '1';
 
         twttr.widgets.createTweet(tweetId, wrap, {
-          width: '100%'
+					theme: darkOn ? 'dark' : 'light',
+					lang: 'ja',
+					align:'left'
+          // width: '100%'
         });
       });
   });
