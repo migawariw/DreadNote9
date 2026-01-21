@@ -820,6 +820,21 @@ async function showEditor( data ) {// dataからhtmlを表示する関数
 		.split( '\n' )
 		.map( line => line || '<div><br></div>' )  // 空行も div に変換
 		.join( '' );
+		// Twitter 再描画（端末ごとに毎回）
+if (window.twttr) {
+  twttr.ready(() => {
+    editor.querySelectorAll('.twitter[data-url]').forEach(wrap => {
+      const url = wrap.dataset.url;
+      const tweetId = url.match(/status\/(\d+)/)?.[1];
+      if (!tweetId) return;
+
+      wrap.innerHTML = '';
+      twttr.widgets.createTweet(tweetId, wrap, {
+        // width: '100%'
+      });
+    });
+  });
+}
 	editor.style.fontSize = savedSize + 'px';
 
 	// カーソルを先頭に移動
@@ -867,8 +882,15 @@ function updateTimestamp( noteId ) {// --- タイムスタンプ更新関数 ---
 }
 async function saveNote() {//5️⃣-2 メモ関連の処理の関数（loadMeta, loadNotes, openEditor, saveNote, updateMeta など）
 	if ( !currentNoteId ) return;
+const clone = editor.cloneNode(true);
 
-	const content = editor.innerHTML;
+// Twitter embed を URL に戻す
+clone.querySelectorAll('.twitter[data-url]').forEach(el => {
+  el.innerHTML = '';          // 中身だけ消す
+  el.removeAttribute('data-rendered');
+});
+
+const content = clone.innerHTML;
 	const size = new Blob( [content] ).size;
 	const updated = Date.now();
 
@@ -1229,25 +1251,24 @@ const embedHandlers = [//SNSリンクを判定して対応する埋め込みhtml
 			return wrap;
 		}
 	},
+  // X / Twitter
+  {
+    match: url =>
+      url.match( /(?:twitter\.com|x\.com)\/[\w@]+\/status\/\d+/i ),
+    create: ( m, url ) => {
+      const wrap = document.createElement( 'div' );
+      wrap.className = 'twitter';
+      wrap.dataset.url = url; // ← ★これだけが真実
 
-	// X / Twitter
-	{
-		match: url =>
-			url.match( /(?:twitter\.com|x\.com)\/[\w@]+\/status\/\d+/i ),
-		create: ( m, url ) => {
-			const wrap = document.createElement( 'div' );
-			wrap.className = 'twitter';
-			const blockquote = document.createElement( 'blockquote' );
-			blockquote.className = 'twitter-tweet';
-			const a = document.createElement( 'a' );
-			a.href = url.replace( /^https?:\/\/x\.com/i, 'https://twitter.com' );
-			blockquote.appendChild( a );
-			wrap.appendChild( blockquote );
-			wrap.dataset.url = url;
-			if ( window.twttr?.widgets ) window.twttr.widgets.load( wrap );
-			return wrap;
-		}
-	},
+      // ❌ blockquote を保存しない
+      // ❌ widgets.load をここで呼ばない
+
+      // 表示用プレースホルダだけ
+      wrap.textContent = url;
+
+      return wrap;
+    }
+  },
 
 	// Instagram
 	{
@@ -1305,6 +1326,25 @@ const embedHandlers = [//SNSリンクを判定して対応する埋め込みhtml
 		}
 	}
 ];
+function renderTwitterEmbeds(root = editor) {
+  if (!window.twttr) return;
+
+  twttr.ready(() => {
+    root.querySelectorAll('.twitter[data-url]:not([data-rendered])')
+      .forEach(wrap => {
+        const url = wrap.dataset.url;
+        const tweetId = url.match(/status\/(\d+)/)?.[1];
+        if (!tweetId) return;
+
+        wrap.innerHTML = '';
+        wrap.dataset.rendered = '1';
+
+        twttr.widgets.createTweet(tweetId, wrap, {
+          width: '100%'
+        });
+      });
+  });
+}
 async function handleSingleImagePaste( file, editor, range ) {
 	const originalSizeBytes = file.size;
 
@@ -1483,6 +1523,7 @@ editor.addEventListener( 'paste', async e => {//Pasteイベント
 	if ( nodes.length ) {
 		replaceRangeWithNodes( editor, range, nodes );
 	}
+	renderTwitterEmbeds(editor);
 } );
 editor.addEventListener( 'copy', e => {
 	const sel = document.getSelection();

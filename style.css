@@ -14,6 +14,7 @@ body,
 #editor {
 touch-action: manipulation;
 /* ダブルタップズームの制御 */
+  overflow-x: hidden;
 }
 
 .auth-loading {
@@ -544,15 +545,15 @@ margin: 0 !important;
 padding: 0 !important;
 background: transparent !important;
 }
+
+.twitter {
+  max-width: 550px;
+  width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
 .twitter iframe{
   border-radius: 12px;
-}
-
-body.spread .twitter {
-max-width: calc(100% - 40px);
-/* 左右padding分を引く */
-margin: 0 auto;
-/* 真ん中に寄せる */
 }
 
 body.spread .instagram {
